@@ -1,1 +1,1391 @@
+<!DOCTYPE html>
+<!--
+  ============================================================================
+  POLARIS OPS — Antarctic Polar Operations Console
+  Single-file frontend: HTML + CSS + JavaScript (no build step, no dependencies)
+  ----------------------------------------------------------------------------
+  MODULES
+    1. Satellite Ground Station & DRS Mission Control
+    2. Meteorological & Atmospheric Resilience Dashboard
+    3. Regulatory, Permitting & Environmental Compliance Portal
+    4. Winter-Over Psychological Well-being Hub
+    5. Infrastructure & Heritage Preservation Tracker
+  ----------------------------------------------------------------------------
+  All data below is simulated for demonstration. Replace the DATA block and the
+  simulation timers with live telemetry / API calls when integrating.
+  ============================================================================
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Polaris Ops — Antarctic Station Operations Console</title>
+<meta name="description" content="Operations console for Antarctic stations: DRS satellite passes, blizzard and rain-on-snow advisories, permitting compliance, winter-over well-being, and heritage integrity logs." />
+<meta property="og:title" content="Polaris Ops — Antarctic Station Operations Console" />
+<meta property="og:description" content="Five-module console for polar ground stations: orbit scheduling, micro-climate forecasting, compliance, well-being, and infrastructure integrity." />
+<meta property="og:type" content="website" />
+<meta name="twitter:card" content="summary_large_image" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
 
+<style>
+/* ==========================================================================
+   1. DESIGN TOKENS — glacial night palette, instrument-panel typography
+   ========================================================================== */
+:root{
+  --ice-900:#050b14;
+  --ice-850:#08111d;
+  --ice-800:#0b1826;
+  --ice-750:#102232;
+  --ice-700:#16303f;
+  --line:rgba(140,205,235,.16);
+  --line-strong:rgba(140,205,235,.34);
+  --text:#e6f2f8;
+  --text-dim:#8fa9b8;
+  --text-faint:#5f7a89;
+  --aurora:#4fe0c0;
+  --aurora-dim:rgba(79,224,192,.14);
+  --beacon:#ffb347;
+  --beacon-dim:rgba(255,179,71,.14);
+  --alarm:#ff6b6b;
+  --alarm-dim:rgba(255,107,107,.14);
+  --signal:#6fb7ff;
+  --signal-dim:rgba(111,183,255,.14);
+  --violet:#b48cff;
+  --r:14px;
+  --r-sm:9px;
+  --mono:"IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  --sans:"Archivo", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --shadow:0 22px 50px -28px rgba(0,0,0,.95);
+}
+
+/* ==========================================================================
+   2. BASE / RESET
+   ========================================================================== */
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  font-family:var(--sans);
+  background:
+    radial-gradient(1100px 620px at 12% -8%, rgba(79,224,192,.10), transparent 62%),
+    radial-gradient(900px 540px at 92% 4%, rgba(111,183,255,.11), transparent 60%),
+    var(--ice-900);
+  color:var(--text);
+  -webkit-font-smoothing:antialiased;
+  min-height:100vh;
+  line-height:1.5;
+}
+a{color:inherit;text-decoration:none}
+button,input,select,textarea{font:inherit;color:inherit}
+::selection{background:rgba(79,224,192,.3)}
+.mono{font-family:var(--mono)}
+.wrap{max-width:1320px;margin:0 auto;padding:0 22px}
+
+/* scrollbars */
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-track{background:var(--ice-850)}
+::-webkit-scrollbar-thumb{background:var(--ice-700);border-radius:20px}
+
+/* ==========================================================================
+   3. TOP BAR + STATION STATUS STRIP
+   ========================================================================== */
+header.topbar{
+  position:sticky;top:0;z-index:50;
+  backdrop-filter:blur(16px);
+  background:rgba(5,11,20,.86);
+  border-bottom:1px solid var(--line);
+}
+.topbar-inner{display:flex;align-items:center;gap:20px;height:64px}
+.brand{display:flex;align-items:center;gap:11px;font-weight:800;letter-spacing:-.02em;font-size:1.02rem}
+.brand .glyph{
+  width:30px;height:30px;border-radius:9px;display:grid;place-items:center;
+  background:linear-gradient(150deg,var(--aurora),var(--signal));
+  color:#04121a;font-family:var(--mono);font-weight:700;font-size:.82rem;
+  box-shadow:0 0 22px rgba(79,224,192,.35);
+}
+.brand small{display:block;font-family:var(--mono);font-weight:500;font-size:.6rem;letter-spacing:.22em;color:var(--text-faint);text-transform:uppercase}
+nav.modnav{display:flex;gap:2px;margin-left:auto;overflow-x:auto;scrollbar-width:none}
+nav.modnav::-webkit-scrollbar{display:none}
+.tab{
+  border:1px solid transparent;background:none;cursor:pointer;
+  padding:8px 13px;border-radius:999px;white-space:nowrap;
+  font-size:.78rem;font-weight:600;color:var(--text-dim);transition:.18s;
+}
+.tab:hover{color:var(--text);background:rgba(140,205,235,.07)}
+.tab[aria-selected="true"]{background:var(--aurora-dim);border-color:var(--line-strong);color:var(--aurora)}
+.clock{font-family:var(--mono);font-size:.74rem;color:var(--text-dim);text-align:right;line-height:1.25;white-space:nowrap}
+.clock b{color:var(--text);font-weight:600}
+
+.statusstrip{
+  border-bottom:1px solid var(--line);
+  background:linear-gradient(90deg,rgba(11,24,38,.9),rgba(8,17,29,.6));
+  overflow:hidden;
+}
+.statusstrip .wrap{display:flex;gap:26px;padding-top:9px;padding-bottom:9px;overflow-x:auto;scrollbar-width:none}
+.statusstrip .wrap::-webkit-scrollbar{display:none}
+.sitem{display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:.7rem;color:var(--text-dim);white-space:nowrap}
+.sitem b{color:var(--text);font-weight:600}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--aurora);box-shadow:0 0 0 3px var(--aurora-dim)}
+.dot.warn{background:var(--beacon);box-shadow:0 0 0 3px var(--beacon-dim)}
+.dot.bad{background:var(--alarm);box-shadow:0 0 0 3px var(--alarm-dim);animation:pulse 1.5s infinite}
+@keyframes pulse{50%{opacity:.35}}
+
+/* ==========================================================================
+   4. LAYOUT PRIMITIVES — panels, grids, headings
+   ========================================================================== */
+main{padding:30px 0 90px}
+.module{display:none;animation:fade .32s ease both}
+.module.active{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+
+.modhead{display:flex;flex-wrap:wrap;align-items:flex-end;gap:14px;margin-bottom:22px}
+.modhead .num{
+  font-family:var(--mono);font-size:.68rem;letter-spacing:.2em;color:var(--aurora);
+  border:1px solid var(--line-strong);border-radius:999px;padding:4px 11px;background:var(--aurora-dim);
+}
+.modhead h1{font-size:clamp(1.4rem,2.7vw,2rem);letter-spacing:-.03em;font-weight:800;width:100%}
+.modhead p{color:var(--text-dim);font-size:.9rem;max-width:75ch}
+
+.grid{display:grid;gap:16px}
+.g2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.g3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.g-2-1{grid-template-columns:1.7fr 1fr}
+.g-1-2{grid-template-columns:1fr 1.7fr}
+@media(max-width:1000px){.g2,.g3,.g-2-1,.g-1-2{grid-template-columns:1fr}}
+
+.panel{
+  background:linear-gradient(180deg,rgba(16,34,50,.72),rgba(8,17,29,.85));
+  border:1px solid var(--line);border-radius:var(--r);padding:18px;box-shadow:var(--shadow);
+}
+.panel h2{font-size:.95rem;font-weight:700;letter-spacing:-.01em;display:flex;align-items:center;gap:9px}
+.panel h3{font-size:.82rem;font-weight:700;color:var(--text)}
+.panel .sub{font-size:.74rem;color:var(--text-faint);font-family:var(--mono);margin-top:3px}
+.phead{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:14px}
+
+.pill{
+  font-family:var(--mono);font-size:.63rem;letter-spacing:.1em;text-transform:uppercase;
+  padding:4px 9px;border-radius:999px;border:1px solid var(--line-strong);color:var(--text-dim);
+}
+.pill.ok{color:var(--aurora);background:var(--aurora-dim);border-color:rgba(79,224,192,.35)}
+.pill.warn{color:var(--beacon);background:var(--beacon-dim);border-color:rgba(255,179,71,.35)}
+.pill.bad{color:var(--alarm);background:var(--alarm-dim);border-color:rgba(255,107,107,.35)}
+.pill.info{color:var(--signal);background:var(--signal-dim);border-color:rgba(111,183,255,.35)}
+
+.metric{font-family:var(--mono);font-size:1.85rem;font-weight:600;letter-spacing:-.03em}
+.metric small{font-size:.8rem;color:var(--text-faint);margin-left:4px}
+.label{font-size:.68rem;font-family:var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--text-faint)}
+
+.bar{height:6px;border-radius:999px;background:rgba(140,205,235,.12);overflow:hidden}
+.bar > i{display:block;height:100%;border-radius:999px;background:linear-gradient(90deg,var(--aurora),var(--signal));transition:width .6s ease}
+.bar.warn > i{background:linear-gradient(90deg,var(--beacon),#ff8f5e)}
+.bar.bad > i{background:linear-gradient(90deg,var(--alarm),#ff9a5e)}
+
+.btn{
+  cursor:pointer;border:1px solid var(--line-strong);background:rgba(140,205,235,.06);
+  padding:8px 14px;border-radius:var(--r-sm);font-size:.76rem;font-weight:600;transition:.16s;
+}
+.btn:hover{background:rgba(140,205,235,.14);transform:translateY(-1px)}
+.btn.primary{background:linear-gradient(140deg,var(--aurora),#37b6ff);color:#04121a;border-color:transparent}
+.btn.primary:hover{filter:brightness(1.08)}
+.btn.ghost{background:none}
+.btn.sm{padding:5px 10px;font-size:.7rem}
+
+table{width:100%;border-collapse:collapse;font-size:.78rem}
+th{
+  text-align:left;font-family:var(--mono);font-size:.63rem;letter-spacing:.13em;text-transform:uppercase;
+  color:var(--text-faint);padding:8px 10px;border-bottom:1px solid var(--line);font-weight:500;
+}
+td{padding:10px;border-bottom:1px solid rgba(140,205,235,.07);vertical-align:middle}
+tbody tr:hover{background:rgba(140,205,235,.045)}
+td.mono,th.mono{font-family:var(--mono)}
+
+.list{display:flex;flex-direction:column;gap:9px}
+.row{
+  display:flex;gap:11px;align-items:flex-start;padding:11px;border-radius:var(--r-sm);
+  border:1px solid var(--line);background:rgba(5,11,20,.45);
+}
+.row .txt{flex:1;min-width:0}
+.row .txt b{display:block;font-size:.82rem}
+.row .txt span{font-size:.73rem;color:var(--text-dim)}
+
+.check{display:flex;align-items:center;gap:10px;cursor:pointer;user-select:none}
+.check input{accent-color:var(--aurora);width:15px;height:15px;cursor:pointer}
+.check.done .txt b{text-decoration:line-through;color:var(--text-faint)}
+
+.field{display:flex;flex-direction:column;gap:5px;margin-bottom:12px}
+.field label{font-size:.7rem;font-family:var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--text-faint)}
+.field input,.field select,.field textarea{
+  background:rgba(5,11,20,.7);border:1px solid var(--line);border-radius:var(--r-sm);
+  padding:9px 11px;font-size:.82rem;outline:none;transition:.15s;width:100%;
+}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--aurora);box-shadow:0 0 0 3px var(--aurora-dim)}
+.field textarea{resize:vertical;min-height:74px;font-family:var(--mono);font-size:.76rem}
+
+/* ==========================================================================
+   5. MODULE 1 — ORBIT SKY TRACKER (radar-style polar plot)
+   ========================================================================== */
+.skyplot{position:relative;aspect-ratio:1;max-width:400px;margin:0 auto}
+.skyplot svg{width:100%;height:100%;overflow:visible}
+.ring{fill:none;stroke:var(--line);stroke-width:1}
+.ring.outer{stroke:var(--line-strong)}
+.crosshair{stroke:var(--line);stroke-width:1;stroke-dasharray:3 5}
+.cardinal{fill:var(--text-faint);font-family:var(--mono);font-size:8px;letter-spacing:.14em}
+.trace{fill:none;stroke-width:2;stroke-linecap:round;opacity:.85}
+.sat{r:4.6;stroke:#04121a;stroke-width:1.4}
+.sweep{transform-origin:100px 100px;animation:spin 8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+.passcard{
+  border:1px solid var(--line);border-radius:var(--r-sm);padding:11px;background:rgba(5,11,20,.5);
+  display:flex;gap:11px;align-items:center;cursor:pointer;transition:.16s;
+}
+.passcard:hover{border-color:var(--line-strong);transform:translateX(3px)}
+.passcard.sel{border-color:var(--aurora);background:var(--aurora-dim)}
+.swatch{width:5px;align-self:stretch;border-radius:99px;min-height:34px}
+
+.kindex{display:flex;gap:3px;align-items:flex-end;height:66px}
+.kindex div{flex:1;border-radius:3px 3px 0 0;background:var(--aurora);opacity:.85;position:relative;transition:.4s}
+.kindex div[data-lvl="mid"]{background:var(--beacon)}
+.kindex div[data-lvl="high"]{background:var(--alarm)}
+
+/* ==========================================================================
+   6. MODULE 2 — WEATHER CHARTS, LIDAR CURTAIN
+   ========================================================================== */
+.spark{width:100%;height:96px;display:block}
+.spark path.line{fill:none;stroke:var(--signal);stroke-width:2}
+.spark path.area{fill:url(#gradA);stroke:none}
+.spark .zeroline{stroke:var(--alarm);stroke-dasharray:4 4;stroke-width:1}
+
+.lidar{
+  position:relative;height:250px;border-radius:var(--r-sm);overflow:hidden;
+  border:1px solid var(--line);background:#04101a;display:flex;align-items:flex-end;gap:1px;padding:0;
+}
+.lidar .col{flex:1;height:100%;display:flex;flex-direction:column-reverse}
+.lidar .cell{flex:1}
+.lidar .pbl{position:absolute;left:0;right:0;border-top:1.5px dashed var(--aurora);pointer-events:none}
+.lidar .pbl span{
+  position:absolute;right:6px;top:-16px;font-family:var(--mono);font-size:.6rem;color:var(--aurora);
+  background:rgba(4,16,26,.85);padding:1px 5px;border-radius:4px;
+}
+.axis{display:flex;justify-content:space-between;font-family:var(--mono);font-size:.62rem;color:var(--text-faint);margin-top:6px}
+
+.wind{position:relative;width:112px;height:112px;border-radius:50%;border:1px solid var(--line-strong);margin:0 auto;display:grid;place-items:center}
+.wind::after{content:"N";position:absolute;top:4px;font-family:var(--mono);font-size:.6rem;color:var(--text-faint)}
+.arrow{
+  width:0;height:0;border-left:8px solid transparent;border-right:8px solid transparent;
+  border-bottom:44px solid var(--signal);transform-origin:50% 100%;transition:transform .8s cubic-bezier(.3,1.4,.4,1);
+  position:absolute;bottom:50%;
+}
+
+/* ==========================================================================
+   7. MODULE 3 — COMPLIANCE PORTAL (stepper, prohibited grid)
+   ========================================================================== */
+.stepper{display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap}
+.step{
+  flex:1;min-width:120px;padding:9px 11px;border-radius:var(--r-sm);border:1px solid var(--line);
+  background:rgba(5,11,20,.45);font-size:.72rem;color:var(--text-dim);
+}
+.step b{display:block;font-family:var(--mono);font-size:.6rem;letter-spacing:.14em;color:var(--text-faint)}
+.step.active{border-color:var(--aurora);background:var(--aurora-dim);color:var(--text)}
+.step.done{border-color:rgba(79,224,192,.3);color:var(--aurora)}
+
+.prohibited{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:11px}
+.pcard{
+  border:1px solid rgba(255,107,107,.25);background:linear-gradient(180deg,rgba(255,107,107,.09),transparent);
+  border-radius:var(--r-sm);padding:12px;
+}
+.pcard b{font-size:.8rem;display:block;margin-bottom:3px}
+.pcard span{font-size:.71rem;color:var(--text-dim)}
+.pcard .pen{margin-top:8px;font-family:var(--mono);font-size:.63rem;color:var(--alarm)}
+
+.drop{
+  border:1.5px dashed var(--line-strong);border-radius:var(--r-sm);padding:18px;text-align:center;
+  font-size:.78rem;color:var(--text-dim);cursor:pointer;transition:.16s;
+}
+.drop:hover,.drop.over{border-color:var(--aurora);background:var(--aurora-dim);color:var(--text)}
+
+/* ==========================================================================
+   8. MODULE 4 — WELL-BEING TIMELINE
+   ========================================================================== */
+.timeline{position:relative;padding-left:26px}
+.timeline::before{content:"";position:absolute;left:8px;top:6px;bottom:6px;width:2px;background:linear-gradient(180deg,var(--signal),var(--violet),var(--beacon),var(--aurora))}
+.tnode{position:relative;margin-bottom:14px;cursor:pointer}
+.tnode::before{
+  content:"";position:absolute;left:-22px;top:14px;width:10px;height:10px;border-radius:50%;
+  background:var(--ice-900);border:2px solid var(--text-faint);transition:.2s;
+}
+.tnode.on::before{border-color:var(--aurora);box-shadow:0 0 0 4px var(--aurora-dim)}
+.tnode .card{border:1px solid var(--line);border-radius:var(--r-sm);padding:12px;background:rgba(5,11,20,.45);transition:.18s}
+.tnode.on .card{border-color:var(--line-strong);background:rgba(16,34,50,.7)}
+
+.gauge{display:flex;flex-direction:column;gap:8px}
+.gauge .g{display:flex;align-items:center;gap:10px;font-size:.75rem}
+.gauge .g span{width:130px;color:var(--text-dim);flex-shrink:0}
+.gauge .g .bar{flex:1}
+.gauge .g b{font-family:var(--mono);width:38px;text-align:right;font-weight:600}
+
+.mood{display:flex;gap:7px;flex-wrap:wrap}
+.mood button{
+  cursor:pointer;border:1px solid var(--line);background:rgba(5,11,20,.5);border-radius:999px;
+  padding:7px 13px;font-size:.76rem;transition:.16s;
+}
+.mood button:hover{border-color:var(--line-strong)}
+.mood button.on{background:var(--aurora-dim);border-color:var(--aurora);color:var(--aurora)}
+
+.thread{border-left:2px solid var(--line-strong);padding:2px 0 2px 12px;margin-bottom:11px}
+.thread b{font-size:.78rem}
+.thread p{font-size:.75rem;color:var(--text-dim)}
+.thread .meta{font-family:var(--mono);font-size:.62rem;color:var(--text-faint);margin-top:4px}
+
+/* ==========================================================================
+   9. MODULE 5 — SITES & HERITAGE
+   ========================================================================== */
+.sitecard{border:1px solid var(--line);border-radius:var(--r-sm);padding:13px;background:rgba(5,11,20,.45)}
+.sitecard header{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:9px}
+.tilt{
+  height:44px;border-radius:var(--r-sm);background:
+    repeating-linear-gradient(90deg,rgba(140,205,235,.09) 0 1px,transparent 1px 22px);
+  position:relative;overflow:hidden;border:1px solid var(--line);
+}
+.tilt i{position:absolute;bottom:0;left:0;height:2px;background:var(--beacon)}
+
+footer{border-top:1px solid var(--line);padding:22px 0;color:var(--text-faint);font-size:.72rem;font-family:var(--mono)}
+
+/* toast */
+#toasts{position:fixed;right:18px;bottom:18px;z-index:200;display:flex;flex-direction:column;gap:9px}
+.toast{
+  background:rgba(11,24,38,.96);border:1px solid var(--line-strong);border-left:3px solid var(--aurora);
+  border-radius:var(--r-sm);padding:11px 14px;font-size:.79rem;box-shadow:var(--shadow);
+  animation:slidein .28s ease both;max-width:330px;
+}
+.toast.warn{border-left-color:var(--beacon)}
+.toast.bad{border-left-color:var(--alarm)}
+.toast b{display:block;font-size:.72rem;font-family:var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--text-faint);margin-bottom:2px}
+@keyframes slidein{from{opacity:0;transform:translateX(24px)}to{opacity:1;transform:none}}
+</style>
+</head>
+
+<body>
+
+<!-- ==========================================================================
+     TOP BAR
+     ========================================================================== -->
+<header class="topbar">
+  <div class="wrap topbar-inner">
+    <div class="brand">
+      <div class="glyph">PO</div>
+      <div>Polaris Ops<small>Bharati Station · 69°S</small></div>
+    </div>
+
+    <nav class="modnav" id="modnav" role="tablist" aria-label="Operational modules">
+      <button class="tab" role="tab" data-mod="m1" aria-selected="true">01 · Ground Station</button>
+      <button class="tab" role="tab" data-mod="m2" aria-selected="false">02 · Meteorology</button>
+      <button class="tab" role="tab" data-mod="m3" aria-selected="false">03 · Compliance</button>
+      <button class="tab" role="tab" data-mod="m4" aria-selected="false">04 · Well-being</button>
+      <button class="tab" role="tab" data-mod="m5" aria-selected="false">05 · Infrastructure</button>
+    </nav>
+
+    <div class="clock"><b id="clkUtc">--:--:--</b> UTC<br /><span id="clkLocal">station --:--</span></div>
+  </div>
+</header>
+
+<!-- Station-wide status strip (live simulated) -->
+<div class="statusstrip">
+  <div class="wrap">
+    <div class="sitem"><i class="dot" id="stDrs"></i>DRS <b id="vDrs">NOMINAL</b></div>
+    <div class="sitem"><i class="dot warn" id="stHf"></i>HF/TTC <b id="vHf">DEGRADED</b></div>
+    <div class="sitem">Kp <b id="vKp">5.7</b></div>
+    <div class="sitem">Temp <b id="vTemp">-14.2 °C</b></div>
+    <div class="sitem">Wind <b id="vWind">38 kt NE</b></div>
+    <div class="sitem">Vis <b id="vVis">1.4 km</b></div>
+    <div class="sitem">PBL <b id="vPbl">640 m</b></div>
+    <div class="sitem"><i class="dot bad"></i>Blizzard watch <b>ACTIVE</b></div>
+    <div class="sitem">Winter-over day <b id="vDay">148</b></div>
+  </div>
+</div>
+
+<main class="wrap">
+
+<!-- ==========================================================================
+     MODULE 1 — SATELLITE GROUND STATION & DRS MISSION CONTROL
+     ========================================================================== -->
+<section class="module active" id="m1" role="tabpanel">
+  <div class="modhead">
+    <span class="num">MODULE 01</span>
+    <h1>Satellite Ground Station &amp; DRS Mission Control</h1>
+    <p>Polar siting yields 10–12 visible orbits per polar-orbiting satellite per day against 4 of 14 from an equatorial site such as Hyderabad. Schedule capture windows, watch geomagnetic disruption of HF links, and hold the overwintering maintenance cadence.</p>
+  </div>
+
+  <div class="grid g3" style="margin-bottom:16px">
+    <div class="panel">
+      <div class="label">Visible orbits today</div>
+      <div class="metric" id="kOrbits">11<small>/ 14 possible</small></div>
+      <div class="bar" style="margin-top:10px"><i style="width:79%"></i></div>
+      <div class="sub">Equatorial baseline: 4 / 14</div>
+    </div>
+    <div class="panel">
+      <div class="label">Data captured (24 h)</div>
+      <div class="metric" id="kData">3.84<small>TB</small></div>
+      <div class="bar" style="margin-top:10px"><i style="width:64%"></i></div>
+      <div class="sub">Target 6.0 TB · downlink X-band 320 Mbps</div>
+    </div>
+    <div class="panel">
+      <div class="label">Link availability</div>
+      <div class="metric" id="kLink">82<small>%</small></div>
+      <div class="bar warn" style="margin-top:10px"><i id="kLinkBar" style="width:82%"></i></div>
+      <div class="sub">HF/DCS impaired by ongoing storm</div>
+    </div>
+  </div>
+
+  <div class="grid g-1-2" style="margin-bottom:16px">
+    <!-- Polar sky plot -->
+    <div class="panel">
+      <div class="phead">
+        <div><h2>Orbit Acquisition Scheduler</h2><div class="sub">Az/El sky view · antenna PA-1 (7.2 m)</div></div>
+        <span class="pill ok" id="trackPill">TRACKING</span>
+      </div>
+
+      <div class="skyplot">
+        <svg viewBox="0 0 200 200" aria-label="Polar sky plot of visible satellite passes">
+          <defs>
+            <radialGradient id="skyg" cx="50%" cy="50%">
+              <stop offset="0%" stop-color="rgba(79,224,192,.10)" />
+              <stop offset="100%" stop-color="rgba(4,16,26,0)" />
+            </radialGradient>
+          </defs>
+          <circle cx="100" cy="100" r="90" fill="url(#skyg)" />
+          <circle class="ring outer" cx="100" cy="100" r="90" />
+          <circle class="ring" cx="100" cy="100" r="60" />
+          <circle class="ring" cx="100" cy="100" r="30" />
+          <line class="crosshair" x1="10" y1="100" x2="190" y2="100" />
+          <line class="crosshair" x1="100" y1="10" x2="100" y2="190" />
+          <text class="cardinal" x="97" y="6">N</text>
+          <text class="cardinal" x="97" y="199">S</text>
+          <text class="cardinal" x="192" y="103">E</text>
+          <text class="cardinal" x="2" y="103">W</text>
+          <g class="sweep">
+            <line x1="100" y1="100" x2="100" y2="10" stroke="rgba(79,224,192,.45)" stroke-width="1.5" />
+          </g>
+          <g id="traces"></g>
+        </svg>
+      </div>
+      <div class="axis"><span>EL 0°</span><span>EL 30°</span><span>EL 60°</span><span>ZENITH</span></div>
+    </div>
+
+    <!-- Pass table -->
+    <div class="panel">
+      <div class="phead">
+        <div><h2>Capture window queue</h2><div class="sub">Click a pass to schedule / release the DRS chain</div></div>
+        <button class="btn sm primary" id="autoSched">Auto-schedule best 6</button>
+      </div>
+      <div class="list" id="passList"></div>
+    </div>
+  </div>
+
+  <div class="grid g-2-1">
+    <!-- Magnetic storm -->
+    <div class="panel">
+      <div class="phead">
+        <div><h2>Magnetic Storm Communication Alerts</h2><div class="sub">Planetary K-index, 3-hourly · HF absorption forecast</div></div>
+        <span class="pill bad" id="stormPill">G2 STORM</span>
+      </div>
+      <div class="kindex" id="kpBars"></div>
+      <div class="axis"><span>-24 h</span><span>-12 h</span><span>now</span><span>+12 h</span><span>+24 h</span></div>
+      <div class="list" style="margin-top:14px" id="stormAlerts"></div>
+    </div>
+
+    <!-- Maintenance -->
+    <div class="panel">
+      <div class="phead">
+        <div><h2>Overwintering Maintenance Logs</h2><div class="sub">24/7 preventive cadence · sub-zero procedures</div></div>
+        <span class="pill" id="maintPill">0 / 0</span>
+      </div>
+      <div class="list" id="maintList"></div>
+      <button class="btn ghost sm" style="margin-top:12px" id="signShift">Sign off current shift</button>
+    </div>
+  </div>
+</section>
+
+<!-- ==========================================================================
+     MODULE 2 — METEOROLOGICAL & ATMOSPHERIC RESILIENCE DASHBOARD
+     ========================================================================== -->
+<section class="module" id="m2" role="tabpanel">
+  <div class="modhead">
+    <span class="num">MODULE 02</span>
+    <h1>Meteorological &amp; Atmospheric Resilience Dashboard</h1>
+    <p>Sparse observation coverage and inversion-driven micro-climates make polar forecasting fragile. Track blizzard onset, above-zero rain events that destroy gravel runways, and ground-based LiDAR returns to 15 km.</p>
+  </div>
+
+  <div class="grid g-2-1" style="margin-bottom:16px">
+    <div class="panel">
+      <div class="phead">
+        <div><h2>Micro-Climatic Forecast &amp; Blizzard Warning</h2><div class="sub">Coastal season baseline: blizzards on 45 of 69 field days</div></div>
+        <span class="pill bad">BLIZZARD WATCH · 14 h</span>
+      </div>
+
+      <div class="grid g3" style="margin-bottom:14px">
+        <div>
+          <div class="label">Sustained wind</div>
+          <div class="metric" id="wSpd">38<small>kt</small></div>
+          <div class="sub">gusting 57 kt</div>
+        </div>
+        <div>
+          <div class="label">MSL pressure trend</div>
+          <div class="metric" id="wPres">974<small>hPa</small></div>
+          <div class="sub" id="wPresTrend">−6.4 hPa / 3 h · falling fast</div>
+        </div>
+        <div>
+          <div class="label">Wind direction</div>
+          <div class="wind"><div class="arrow" id="windArrow"></div></div>
+        </div>
+      </div>
+
+      <div class="label" style="margin-bottom:6px">Pressure &amp; wind, last 24 h</div>
+      <svg class="spark" id="presSpark" viewBox="0 0 600 96" preserveAspectRatio="none">
+        <defs><linearGradient id="gradA" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="rgba(111,183,255,.35)" /><stop offset="100%" stop-color="rgba(111,183,255,0)" />
+        </linearGradient></defs>
+      </svg>
+
+      <div class="list" style="margin-top:14px" id="opsWindows"></div>
+    </div>
+
+    <div class="panel">
+      <div class="phead">
+        <div><h2>Rain &amp; Slush Advisory</h2><div class="sub">Liquid precipitation monitor · T &gt; 0 °C</div></div>
+        <span class="pill warn" id="rainPill">WATCH</span>
+      </div>
+      <div class="label">Air temperature</div>
+      <div class="metric" id="rTemp">-1.4<small>°C</small></div>
+      <div class="bar warn" style="margin:10px 0 4px"><i id="rTempBar" style="width:72%"></i></div>
+      <div class="sub">Freeze threshold at 0 °C · spike margin 1.4 °C</div>
+
+      <div class="list" style="margin-top:14px">
+        <div class="row"><span class="pill bad">RUNWAY</span><div class="txt"><b>Gravel airstrip: rain-on-gravel risk</b><span>Freeze-back would render the strip unusable within one cycle. Aviation hold recommended.</span></div></div>
+        <div class="row"><span class="pill warn">SLUSH</span><div class="txt"><b>Tent line &amp; instrument field</b><span>Melt ingress under skirts; elevate field instruments 300 mm.</span></div></div>
+        <div class="row"><span class="pill info">FABRIC</span><div class="txt"><b>Module cladding</b><span>Envelope specified for dry snow; log water tracking at joints daily.</span></div></div>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:12px">
+        <button class="btn sm primary" id="declHold">Declare aviation hold</button>
+        <button class="btn sm ghost" id="logSlush">Log slush observation</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="phead">
+      <div><h2>Ground-Based Remote Sensing Integrator</h2><div class="sub">MiniMPL LiDAR · backscatter curtain 0–15 km · PBL, cloud, aerosol retrieval</div></div>
+      <div style="display:flex;gap:8px">
+        <span class="pill info" id="pblPill">PBL 640 m</span>
+        <button class="btn sm ghost" id="lidarToggle">Pause stream</button>
+      </div>
+    </div>
+    <div class="lidar" id="lidar"><div class="pbl" id="pblLine"><span>PBL</span></div></div>
+    <div class="axis"><span>-3 h</span><span>-2 h</span><span>-1 h</span><span>now</span></div>
+    <div class="grid g3" style="margin-top:14px">
+      <div><div class="label">Cloud base / thickness</div><div class="metric" id="lCloud">1.9<small>km / 0.8 km</small></div></div>
+      <div><div class="label">Aerosol layer top</div><div class="metric" id="lAer">4.3<small>km</small></div></div>
+      <div><div class="label">Satellite validation match</div><div class="metric" id="lVal">91<small>% over snow</small></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ==========================================================================
+     MODULE 3 — REGULATORY, PERMITTING & ENVIRONMENTAL COMPLIANCE PORTAL
+     ========================================================================== -->
+<section class="module" id="m3" role="tabpanel">
+  <div class="modhead">
+    <span class="num">MODULE 03</span>
+    <h1>Regulatory, Permitting &amp; Environmental Compliance Portal</h1>
+    <p>Administrative gateway for the Indian Antarctic Act and Antarctic Treaty System obligations: permits, Environmental Impact Assessments, waste plans, and biosecurity controls.</p>
+  </div>
+
+  <div class="grid g-2-1" style="margin-bottom:16px">
+    <div class="panel">
+      <div class="phead">
+        <div><h2>Expedition Permit Portal</h2><div class="sub">Application EXP-2026-0147 · Draft</div></div>
+        <span class="pill warn" id="permitPill">2 prerequisites missing</span>
+      </div>
+
+      <div class="stepper" id="stepper">
+        <div class="step done"><b>STEP 1</b>Applicant &amp; expedition</div>
+        <div class="step active"><b>STEP 2</b>Activity &amp; permit class</div>
+        <div class="step"><b>STEP 3</b>EIA &amp; waste plan</div>
+        <div class="step"><b>STEP 4</b>Biosecurity declaration</div>
+        <div class="step"><b>STEP 5</b>Submit to competent authority</div>
+      </div>
+
+      <form id="permitForm" novalidate>
+        <div class="grid g2">
+          <div class="field"><label>Lead investigator</label><input required placeholder="Dr. A. Sharma" /></div>
+          <div class="field"><label>Institution</label><input required placeholder="NCPOR, Goa" /></div>
+        </div>
+        <div class="grid g2">
+          <div class="field">
+            <label>Permit class</label>
+            <select id="permitClass">
+              <option>Entry to Antarctica (Sec. 7)</option>
+              <option>Stay at a research base</option>
+              <option>Aircraft entry / overflight of protected area</option>
+              <option>Vessel entry to Antarctic waters</option>
+              <option>Sampling of native flora / fauna</option>
+              <option>Drilling &amp; ice-core recovery</option>
+            </select>
+          </div>
+          <div class="field"><label>Field window</label><input type="text" placeholder="2026-11-14 → 2027-02-28" /></div>
+        </div>
+        <div class="field"><label>Activity description</label><textarea placeholder="Deployment of two automated weather stations and LiDAR calibration campaign within 5 km of the station..."></textarea></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn primary" type="submit">Validate &amp; advance</button>
+          <button class="btn ghost" type="button" id="saveDraft">Save draft</button>
+        </div>
+      </form>
+    </div>
+
+    <div class="panel">
+      <div class="phead"><div><h2>EIA &amp; Waste Management</h2><div class="sub">Legal prerequisites for approval</div></div></div>
+      <div class="drop" id="dropEia"><b>Upload Environmental Impact Assessment</b><br /><span class="sub">Preliminary / IEE / CEE · PDF</span></div>
+      <div style="height:10px"></div>
+      <div class="drop" id="dropWaste"><b>Upload Waste Management Plan</b><br /><span class="sub">Segregation, retrograde, and fuel-spill annexes</span></div>
+      <div class="list" style="margin-top:14px" id="docList"></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="phead">
+      <div><h2>Biosecurity &amp; Prohibited Activity Guidelines</h2><div class="sub">Penalties apply under national implementing legislation</div></div>
+      <span class="pill bad">STRICT LIABILITY</span>
+    </div>
+    <div class="prohibited">
+      <div class="pcard"><b>Unauthorised drilling</b><span>Mineral resource activity and any unpermitted subsurface drilling.</span><div class="pen">Imprisonment + fine · permit revocation</div></div>
+      <div class="pcard"><b>Nuclear activity</b><span>Nuclear explosions or disposal of radioactive waste.</span><div class="pen">Highest-tier criminal penalty</div></div>
+      <div class="pcard"><b>Ocean garbage dumping</b><span>Discharge of waste, plastics, or untreated effluent to sea.</span><div class="pen">Fine + retrograde cost recovery</div></div>
+      <div class="pcard"><b>Non-sterile soil</b><span>Introduction of soil, gravel, or unsterilised substrate.</span><div class="pen">Fine · mandatory remediation</div></div>
+      <div class="pcard"><b>Non-native species</b><span>Import of plants, animals, seeds, or microbial cultures.</span><div class="pen">Fine + eradication liability</div></div>
+      <div class="pcard"><b>Protected-area intrusion</b><span>ASPA entry or aircraft landing without a specific permit.</span><div class="pen">Fine · expedition suspension</div></div>
+    </div>
+
+    <div class="grid g2" style="margin-top:16px">
+      <div>
+        <h3 style="margin-bottom:8px">Pre-departure biosecurity checklist</h3>
+        <div class="list" id="bioList"></div>
+      </div>
+      <div>
+        <h3 style="margin-bottom:8px">Compliance score</h3>
+        <div class="metric" id="bioScore">0<small>%</small></div>
+        <div class="bar bad" style="margin-top:10px"><i id="bioBar" style="width:0%"></i></div>
+        <p class="sub" style="margin-top:10px">A permit cannot be forwarded to the competent authority until every biosecurity item is cleared and both statutory documents are attached.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ==========================================================================
+     MODULE 4 — WINTER-OVER PSYCHOLOGICAL WELL-BEING HUB
+     ========================================================================== -->
+<section class="module" id="m4" role="tabpanel">
+  <div class="modhead">
+    <span class="num">MODULE 04</span>
+    <h1>Winter-Over Psychological Well-being Hub</h1>
+    <p>Confidential support mapped to the documented arc of a winter-over: onset stress in March, midwinter insomnia in June, minimum interpersonal rapport in September, and satisfaction decline through December–January.</p>
+  </div>
+
+  <div class="grid g-1-2" style="margin-bottom:16px">
+    <div class="panel">
+      <div class="phead"><div><h2>Timeline-Based Support Tracker</h2><div class="sub">Select a phase to view indicators</div></div></div>
+      <div class="timeline" id="timeline"></div>
+    </div>
+
+    <div class="panel">
+      <div class="phead">
+        <div><h2 id="phaseTitle">March · Beginning of isolation</h2><div class="sub" id="phaseSub">Onset phase</div></div>
+        <span class="pill warn" id="phasePill">ELEVATED</span>
+      </div>
+      <p id="phaseDesc" style="font-size:.85rem;color:var(--text-dim);margin-bottom:14px"></p>
+      <div class="gauge" id="phaseGauges"></div>
+      <div class="list" style="margin-top:16px" id="phaseActions"></div>
+    </div>
+  </div>
+
+  <div class="grid g3">
+    <div class="panel">
+      <div class="phead"><div><h2>Anonymous daily check-in</h2><div class="sub">Stored locally · never attributed</div></div></div>
+      <div class="label" style="margin-bottom:7px">How is today?</div>
+      <div class="mood" id="moodRow">
+        <button data-v="5">Steady</button><button data-v="4">Flat</button>
+        <button data-v="3">Strained</button><button data-v="2">Low</button><button data-v="1">Struggling</button>
+      </div>
+      <div class="field" style="margin-top:12px"><label>Sleep last night (h)</label><input type="number" id="sleepH" min="0" max="14" step="0.5" value="5.5" /></div>
+      <button class="btn primary sm" id="submitCheckin">Submit anonymously</button>
+      <p class="sub" style="margin-top:9px" id="checkinNote">No submission today.</p>
+    </div>
+
+    <div class="panel">
+      <div class="phead"><div><h2>Polar-night sleep hygiene</h2><div class="sub">Circadian anchoring without daylight</div></div></div>
+      <div class="list">
+        <div class="row"><span class="pill info">10 000 lx</span><div class="txt"><b>Timed light box, 06:30–07:10</b><span>Anchor wake time before galley shift; avoid after 14:00.</span></div></div>
+        <div class="row"><span class="pill info">TEMP</span><div class="txt"><b>Berth at 17–18 °C</b><span>Overheated cabins are a leading cause of midwinter fragmentation.</span></div></div>
+        <div class="row"><span class="pill info">SCREENS</span><div class="txt"><b>Amber filter after 21:00</b><span>Comms shifts should use red-mode consoles where possible.</span></div></div>
+        <div class="row"><span class="pill info">STIM</span><div class="txt"><b>Caffeine cut-off 12:00</b><span>Track alongside reported smoking increase in the onset phase.</span></div></div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="phead"><div><h2>Secure peer forum</h2><div class="sub">Pseudonymous · station-only</div></div><span class="pill ok">E2E</span></div>
+      <div id="threads"></div>
+      <div class="field"><label>Post to the group</label><textarea id="postBody" placeholder="Something you want the team to know, without your name on it..."></textarea></div>
+      <button class="btn primary sm" id="postBtn">Post pseudonymously</button>
+    </div>
+  </div>
+</section>
+
+<!-- ==========================================================================
+     MODULE 5 — INFRASTRUCTURE & HERITAGE PRESERVATION TRACKER
+     ========================================================================== -->
+<section class="module" id="m5" role="tabpanel">
+  <div class="modhead">
+    <span class="num">MODULE 05</span>
+    <h1>Infrastructure &amp; Heritage Preservation Tracker</h1>
+    <p>Warming is compromising both operational sites and historic installations: meltwater access delays of the kind recorded at long-running ecological sites such as Mars Oasis, plus thaw-driven foundation movement and rain-accelerated timber rot.</p>
+  </div>
+
+  <div class="grid g2" style="margin-bottom:16px">
+    <div class="panel">
+      <div class="phead">
+        <div><h2>Research Site Access Status</h2><div class="sub">Meltwater, crevassing, and traverse feasibility</div></div>
+        <span class="pill warn" id="sitePill">2 sites restricted</span>
+      </div>
+      <table>
+        <thead><tr><th>Site</th><th>Access</th><th class="mono">Meltwater</th><th class="mono">Delay</th><th>Route</th></tr></thead>
+        <tbody id="siteRows"></tbody>
+      </table>
+    </div>
+
+    <div class="panel">
+      <div class="phead">
+        <div><h2>Historic Preservation Integrity Logs</h2><div class="sub">Timber huts &amp; legacy installations</div></div>
+        <span class="pill bad" id="heritagePill">1 structural alert</span>
+      </div>
+      <div class="grid" id="heritageCards"></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="phead">
+      <div><h2>Raise an integrity observation</h2><div class="sub">Feeds the preservation work order queue</div></div>
+    </div>
+    <div class="grid g3">
+      <div class="field"><label>Asset</label><select id="obsAsset"></select></div>
+      <div class="field"><label>Observation type</label>
+        <select id="obsType">
+          <option>Foundation settlement / thaw</option>
+          <option>Timber rot &amp; moisture ingress</option>
+          <option>Meltwater channel encroachment</option>
+          <option>Wind scour / cladding loss</option>
+          <option>Snow drift loading</option>
+        </select>
+      </div>
+      <div class="field"><label>Severity</label><select id="obsSev"><option>Monitor</option><option>Elevated</option><option>Structural alert</option></select></div>
+    </div>
+    <div class="field"><label>Notes</label><textarea id="obsNotes" placeholder="North-east sill measured 42 mm below datum, +9 mm since last survey..."></textarea></div>
+    <button class="btn primary" id="obsSubmit">File observation</button>
+    <div class="list" style="margin-top:14px" id="obsLog"></div>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <div class="wrap">POLARIS OPS · demonstration console · all telemetry simulated client-side · no data leaves this browser</div>
+</footer>
+
+<div id="toasts" aria-live="polite"></div>
+
+<script>
+/* ==========================================================================
+   0. SMALL UTILITIES
+   ========================================================================== */
+const $  = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const rnd  = (a, b) => a + Math.random() * (b - a);
+const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+const pad = n => String(n).padStart(2, "0");
+
+/** Transient notification. kind: "", "warn", "bad" */
+function toast(title, msg, kind = "") {
+  const el = document.createElement("div");
+  el.className = "toast " + kind;
+  el.innerHTML = `<b>${title}</b>${msg}`;
+  $("#toasts").appendChild(el);
+  setTimeout(() => { el.style.opacity = "0"; el.style.transform = "translateX(20px)"; }, 4200);
+  setTimeout(() => el.remove(), 4700);
+}
+
+/* ==========================================================================
+   1. MODULE TAB ROUTING
+   ========================================================================== */
+$$("#modnav .tab").forEach(tab => {
+  tab.addEventListener("click", () => {
+    $$("#modnav .tab").forEach(t => t.setAttribute("aria-selected", String(t === tab)));
+    $$(".module").forEach(m => m.classList.toggle("active", m.id === tab.dataset.mod));
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  });
+});
+
+/* ==========================================================================
+   2. CLOCKS (UTC + station local, here UTC+5 for a 69°E coastal station)
+   ========================================================================== */
+setInterval(() => {
+  const d = new Date();
+  $("#clkUtc").textContent = `${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}:${pad(d.getUTCSeconds())}`;
+  const l = new Date(d.getTime() + 5 * 3600e3);
+  $("#clkLocal").textContent = `station ${pad(l.getUTCHours())}:${pad(l.getUTCMinutes())}`;
+}, 1000);
+
+/* ==========================================================================
+   MODULE 1 — GROUND STATION
+   ========================================================================== */
+
+/* 1.1 Pass model ---------------------------------------------------------- */
+const SATS = [
+  { id: "RISAT-2BR1", band: "X",  color: "#4fe0c0" },
+  { id: "OCEANSAT-3", band: "X",  color: "#6fb7ff" },
+  { id: "CARTOSAT-3", band: "X",  color: "#b48cff" },
+  { id: "NOAA-20",    band: "L",  color: "#ffb347" },
+  { id: "SENTINEL-1", band: "X",  color: "#ff6b6b" },
+  { id: "METOP-C",    band: "L",  color: "#7de08f" }
+];
+
+/** Build a plausible set of 11 visible passes over the next 12 hours. */
+function buildPasses() {
+  const out = [];
+  let t = Date.now() + 4 * 60e3;
+  for (let i = 0; i < 11; i++) {
+    const s = SATS[i % SATS.length];
+    const maxEl = Math.round(rnd(18, 88));
+    const dur = Math.round(rnd(6, 14));
+    out.push({
+      key: "P" + (i + 1),
+      sat: s.id, color: s.color, band: s.band,
+      aos: new Date(t),
+      dur, maxEl,
+      volume: +(dur * rnd(0.03, 0.075)).toFixed(2),
+      azStart: Math.round(rnd(0, 359)),
+      azEnd: Math.round(rnd(0, 359)),
+      scheduled: i < 3
+    });
+    t += rnd(35, 85) * 60e3;
+  }
+  return out;
+}
+let passes = buildPasses();
+let selectedPass = passes[0].key;
+
+const hhmm = d => `${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}Z`;
+
+/* 1.2 Pass list ----------------------------------------------------------- */
+function renderPasses() {
+  $("#passList").innerHTML = passes.map(p => `
+    <div class="passcard ${p.key === selectedPass ? "sel" : ""}" data-key="${p.key}">
+      <span class="swatch" style="background:${p.color}"></span>
+      <div class="txt" style="flex:1">
+        <b>${p.sat} <span class="mono" style="color:var(--text-faint);font-weight:400">· ${p.band}-band</span></b>
+        <span class="mono">AOS ${hhmm(p.aos)} · ${p.dur} min · max EL ${p.maxEl}° · ~${p.volume} TB</span>
+      </div>
+      <span class="pill ${p.scheduled ? "ok" : ""}">${p.scheduled ? "SCHEDULED" : "IDLE"}</span>
+    </div>`).join("");
+
+  $$("#passList .passcard").forEach(c => {
+    c.addEventListener("click", () => {
+      const p = passes.find(x => x.key === c.dataset.key);
+      selectedPass = p.key;
+      p.scheduled = !p.scheduled;
+      toast(p.scheduled ? "DRS scheduled" : "DRS released",
+            `${p.sat} · AOS ${hhmm(p.aos)} · max EL ${p.maxEl}°`,
+            p.scheduled ? "" : "warn");
+      renderPasses(); renderSky(); updateOrbitKpis();
+    });
+  });
+}
+
+/** Draw each pass as an arc across the az/el sky plot. */
+function renderSky() {
+  const toXY = (azDeg, elDeg) => {
+    const r = 90 * (1 - elDeg / 90), a = (azDeg - 90) * Math.PI / 180;
+    return [100 + r * Math.cos(a), 100 + r * Math.sin(a)];
+  };
+  $("#traces").innerHTML = passes.slice(0, 7).map(p => {
+    const [x1, y1] = toXY(p.azStart, 3);
+    const [xm, ym] = toXY((p.azStart + p.azEnd) / 2, p.maxEl);
+    const [x2, y2] = toXY(p.azEnd, 3);
+    const dim = p.scheduled ? 1 : .28;
+    const sel = p.key === selectedPass;
+    return `<path class="trace" d="M${x1} ${y1} Q ${xm} ${ym} ${x2} ${y2}"
+              stroke="${p.color}" opacity="${dim}" stroke-width="${sel ? 3 : 2}" />
+            <circle class="sat" cx="${xm}" cy="${ym}" fill="${p.color}" opacity="${dim}" />`;
+  }).join("");
+}
+
+function updateOrbitKpis() {
+  const sched = passes.filter(p => p.scheduled);
+  const tb = sched.reduce((a, p) => a + p.volume, 0);
+  $("#kOrbits").innerHTML = `${passes.length}<small>/ 14 possible</small>`;
+  $("#kData").innerHTML = `${tb.toFixed(2)}<small>TB</small>`;
+  $("#trackPill").textContent = sched.length ? `${sched.length} SCHEDULED` : "IDLE";
+}
+
+$("#autoSched").addEventListener("click", () => {
+  const best = [...passes].sort((a, b) => b.maxEl - a.maxEl).slice(0, 6).map(p => p.key);
+  passes.forEach(p => p.scheduled = best.includes(p.key));
+  renderPasses(); renderSky(); updateOrbitKpis();
+  toast("Scheduler", "Six highest-elevation passes committed to the DRS chain.");
+});
+
+/* 1.3 Kp index + storm alerts -------------------------------------------- */
+function renderKp() {
+  const vals = Array.from({ length: 16 }, (_, i) =>
+    clamp(Math.round(rnd(1, 5) + (i > 8 ? 3 : 0)), 0, 9));
+  $("#kpBars").innerHTML = vals.map(v => {
+    const lvl = v >= 7 ? "high" : v >= 5 ? "mid" : "low";
+    return `<div data-lvl="${lvl}" style="height:${(v / 9) * 100}%" title="Kp ${v}"></div>`;
+  }).join("");
+  const now = vals[9];
+  $("#vKp").textContent = now.toFixed(1);
+  const cls = now >= 7 ? "bad" : now >= 5 ? "warn" : "ok";
+  const pill = $("#stormPill");
+  pill.className = "pill " + cls;
+  pill.textContent = now >= 7 ? "G3 STORM" : now >= 5 ? "G2 STORM" : "QUIET";
+
+  $("#stormAlerts").innerHTML = [
+    { p: now >= 5 ? "bad" : "ok", t: "HF / DCS blackout risk", s: now >= 5
+        ? "Polar cap absorption expected on 3–10 MHz for the next 6–9 h. Fall back to Iridium burst for DCS traffic."
+        : "Propagation nominal across the DCS band plan." },
+    { p: now >= 5 ? "warn" : "ok", t: "TTC ranging degradation", s: "Expect elevated bit-error on S-band TTC during auroral substorms; extend command retries to 5." },
+    { p: "info", t: "Overwintering engineer advisory", s: "Two-hourly link checks logged to the maintenance register while the storm watch is open." }
+  ].map(a => `<div class="row"><span class="pill ${a.p}">${a.p === "bad" ? "ALERT" : a.p === "warn" ? "WATCH" : "INFO"}</span>
+      <div class="txt"><b>${a.t}</b><span>${a.s}</span></div></div>`).join("");
+
+  const linkAvail = Math.round(clamp(100 - now * 4.6 + rnd(-3, 3), 45, 99));
+  $("#kLink").innerHTML = `${linkAvail}<small>%</small>`;
+  $("#kLinkBar").style.width = linkAvail + "%";
+  $("#vHf").textContent = linkAvail > 90 ? "NOMINAL" : linkAvail > 70 ? "DEGRADED" : "BLACKOUT";
+  $("#stHf").className = "dot " + (linkAvail > 90 ? "" : linkAvail > 70 ? "warn" : "bad");
+}
+
+/* 1.4 Maintenance checklist ---------------------------------------------- */
+const MAINT = [
+  ["Antenna PA-1 de-icing cycle & radome inspection", "every 6 h · sub-zero procedure"],
+  ["Diesel gen-set A load test and fuel polish", "daily 0400Z"],
+  ["DRS raid array health + spare drive count", "daily"],
+  ["UPS battery temperature compensation check", "twice weekly"],
+  ["HF antenna guy tension after blizzard", "post-event"],
+  ["Cryo-lubricant top-up on azimuth bearing", "weekly"],
+  ["Fire suppression + escape route snow clearance", "daily"]
+];
+let maintState = MAINT.map((_, i) => i < 2);
+
+function renderMaint() {
+  $("#maintList").innerHTML = MAINT.map(([t, s], i) => `
+    <label class="row check ${maintState[i] ? "done" : ""}">
+      <input type="checkbox" data-i="${i}" ${maintState[i] ? "checked" : ""} />
+      <div class="txt"><b>${t}</b><span class="mono">${s}</span></div>
+    </label>`).join("");
+  $("#maintPill").textContent = `${maintState.filter(Boolean).length} / ${MAINT.length}`;
+  $$("#maintList input").forEach(cb => cb.addEventListener("change", () => {
+    maintState[+cb.dataset.i] = cb.checked; renderMaint();
+  }));
+}
+$("#signShift").addEventListener("click", () => {
+  const open = maintState.filter(v => !v).length;
+  open ? toast("Shift not signed", `${open} preventive task(s) still open.`, "warn")
+       : toast("Shift signed off", "Overwintering log entry committed for this watch.");
+});
+
+/* ==========================================================================
+   MODULE 2 — METEOROLOGY
+   ========================================================================== */
+
+/* 2.1 Pressure sparkline -------------------------------------------------- */
+function renderSpark() {
+  const n = 48, pts = [];
+  let p = 1002;
+  for (let i = 0; i < n; i++) { p -= rnd(0.1, 1.4); pts.push(p); }
+  const min = Math.min(...pts) - 2, max = Math.max(...pts) + 2;
+  const X = i => (i / (n - 1)) * 600;
+  const Y = v => 90 - ((v - min) / (max - min)) * 80;
+  const line = pts.map((v, i) => `${i ? "L" : "M"}${X(i).toFixed(1)} ${Y(v).toFixed(1)}`).join(" ");
+  const svg = $("#presSpark");
+  svg.querySelectorAll("path,circle").forEach(e => e.remove());
+  svg.insertAdjacentHTML("beforeend",
+    `<path class="area" d="${line} L600 96 L0 96 Z" />
+     <path class="line" d="${line}" />
+     <circle cx="600" cy="${Y(pts[n - 1]).toFixed(1)}" r="4" fill="#6fb7ff" />`);
+  const last = pts[n - 1], d3 = last - pts[n - 7];
+  $("#wPres").innerHTML = `${Math.round(last)}<small>hPa</small>`;
+  $("#wPresTrend").textContent = `${d3.toFixed(1)} hPa / 3 h · ${d3 < -3 ? "falling fast" : d3 < 0 ? "falling" : "steady"}`;
+}
+
+/* 2.2 Wind + operational windows ------------------------------------------ */
+function renderWind() {
+  const dir = Math.round(rnd(0, 359)), spd = Math.round(rnd(22, 62));
+  $("#windArrow").style.transform = `rotate(${dir}deg)`;
+  $("#wSpd").innerHTML = `${spd}<small>kt</small>`;
+  const compass = ["N","NE","E","SE","S","SW","W","NW"][Math.round(dir / 45) % 8];
+  $("#vWind").textContent = `${spd} kt ${compass}`;
+
+  const windows = [
+    { w: "Aviation — fixed wing (gravel strip)", ok: spd < 25, why: spd < 25 ? "Within crosswind limits" : "Wind and blowing-snow visibility below minima" },
+    { w: "Field traverse — skidoo party", ok: spd < 38, why: spd < 38 ? "Go, with recall trigger at 40 kt" : "Recall in force; parties to remain within station perimeter" },
+    { w: "External maintenance at height", ok: spd < 20, why: spd < 20 ? "Permitted with harness" : "Suspended" },
+    { w: "Balloon / radiosonde release", ok: spd < 30, why: spd < 30 ? "Cleared for 11:15Z ascent" : "Deferred to next synoptic hour" }
+  ];
+  $("#opsWindows").innerHTML = windows.map(o => `
+    <div class="row"><span class="pill ${o.ok ? "ok" : "bad"}">${o.ok ? "GO" : "NO-GO"}</span>
+      <div class="txt"><b>${o.w}</b><span>${o.why}</span></div></div>`).join("");
+}
+
+/* 2.3 Rain / slush monitor ------------------------------------------------ */
+function renderRain() {
+  const t = +rnd(-6, 2.4).toFixed(1);
+  $("#rTemp").innerHTML = `${t}<small>°C</small>`;
+  $("#vTemp").textContent = `${t} °C`;
+  $("#rTempBar").style.width = clamp(((t + 8) / 12) * 100, 4, 100) + "%";
+  const pill = $("#rainPill");
+  if (t > 0)        { pill.className = "pill bad";  pill.textContent = "RAIN EVENT"; }
+  else if (t > -2)  { pill.className = "pill warn"; pill.textContent = "WATCH"; }
+  else              { pill.className = "pill ok";   pill.textContent = "DRY SNOW"; }
+}
+$("#declHold").addEventListener("click", () =>
+  toast("Aviation hold declared", "Gravel strip closed pending freeze-back survey.", "bad"));
+$("#logSlush").addEventListener("click", () =>
+  toast("Observation logged", "Slush depth entry appended to the met register.", "warn"));
+
+/* 2.4 LiDAR backscatter curtain ------------------------------------------- */
+const LIDAR_COLS = 90, LIDAR_CELLS = 34;   // 34 cells ≈ 0–15 km
+let lidarRunning = true;
+
+function lidarColumn() {
+  const pbl = Math.round(rnd(3, 6));                       // boundary layer cells
+  const cloudBase = Math.round(rnd(9, 15)), cloudTop = cloudBase + Math.round(rnd(1, 4));
+  const cells = [];
+  for (let i = 0; i < LIDAR_CELLS; i++) {
+    let v = 0.05;
+    if (i < pbl) v = rnd(0.55, 0.95);                       // strong aerosol return near surface
+    else if (i < pbl + 4) v = rnd(0.2, 0.45);               // residual layer
+    else if (i >= cloudBase && i <= cloudTop) v = rnd(0.7, 1);
+    else if (i < 22) v = rnd(0.05, 0.2);                    // free-troposphere aerosol
+    else v = rnd(0.01, 0.06);
+    cells.push(v);
+  }
+  return { cells, pbl, cloudBase, cloudTop };
+}
+function colorFor(v) {
+  if (v > .75) return `rgba(255,240,190,${v})`;
+  if (v > .5)  return `rgba(255,179,71,${v})`;
+  if (v > .28) return `rgba(111,183,255,${v + .18})`;
+  if (v > .12) return `rgba(79,224,192,${v + .22})`;
+  return `rgba(20,50,70,${.55})`;
+}
+function buildLidar() {
+  const host = $("#lidar");
+  host.querySelectorAll(".col").forEach(c => c.remove());
+  for (let c = 0; c < LIDAR_COLS; c++) host.appendChild(makeCol());
+}
+function makeCol() {
+  const { cells, pbl, cloudBase, cloudTop } = lidarColumn();
+  const col = document.createElement("div");
+  col.className = "col";
+  col.dataset.pbl = pbl; col.dataset.cb = cloudBase; col.dataset.ct = cloudTop;
+  col.innerHTML = cells.map(v => `<div class="cell" style="background:${colorFor(v)}"></div>`).join("");
+  return col;
+}
+function stepLidar() {
+  if (!lidarRunning) return;
+  const host = $("#lidar");
+  const first = host.querySelector(".col");
+  if (first) first.remove();
+  const col = makeCol();
+  host.appendChild(col);
+
+  const pblCells = +col.dataset.pbl;
+  const pblKm = (pblCells / LIDAR_CELLS) * 15;
+  $("#pblLine").style.bottom = `${(pblCells / LIDAR_CELLS) * 100}%`;
+  $("#pblPill").textContent = `PBL ${Math.round(pblKm * 1000)} m`;
+  $("#vPbl").textContent = `${Math.round(pblKm * 1000)} m`;
+  const cb = (+col.dataset.cb / LIDAR_CELLS) * 15, ct = (+col.dataset.ct / LIDAR_CELLS) * 15;
+  $("#lCloud").innerHTML = `${cb.toFixed(1)}<small>km / ${(ct - cb).toFixed(1)} km</small>`;
+  $("#lAer").innerHTML = `${rnd(3.1, 5.6).toFixed(1)}<small>km</small>`;
+  $("#lVal").innerHTML = `${Math.round(rnd(86, 96))}<small>% over snow</small>`;
+}
+$("#lidarToggle").addEventListener("click", e => {
+  lidarRunning = !lidarRunning;
+  e.target.textContent = lidarRunning ? "Pause stream" : "Resume stream";
+});
+
+/* ==========================================================================
+   MODULE 3 — COMPLIANCE
+   ========================================================================== */
+const BIO = [
+  "Boots, crampons and tripod feet scrubbed and disinfected",
+  "Velcro, cuffs and pockets vacuumed for seeds and plant matter",
+  "Cargo pallets inspected for soil, gravel and invertebrates",
+  "No untreated soil, compost or substrate in manifest",
+  "Fresh produce declared and quarantined per station protocol",
+  "Field gear sterilised between ASPA and non-ASPA sites"
+];
+let bioState = BIO.map(() => false);
+let docs = [];
+
+function renderBio() {
+  $("#bioList").innerHTML = BIO.map((t, i) => `
+    <label class="row check ${bioState[i] ? "done" : ""}">
+      <input type="checkbox" data-i="${i}" ${bioState[i] ? "checked" : ""} />
+      <div class="txt"><b>${t}</b></div>
+    </label>`).join("");
+  $$("#bioList input").forEach(cb => cb.addEventListener("change", () => {
+    bioState[+cb.dataset.i] = cb.checked; renderBio(); renderCompliance();
+  }));
+}
+function renderDocs() {
+  $("#docList").innerHTML = docs.length
+    ? docs.map(d => `<div class="row"><span class="pill ok">ATTACHED</span>
+        <div class="txt"><b>${d.name}</b><span class="mono">${d.kind} · ${d.size}</span></div></div>`).join("")
+    : `<div class="row"><span class="pill warn">MISSING</span><div class="txt"><b>No statutory documents attached</b><span>EIA and Waste Management Plan are both mandatory.</span></div></div>`;
+}
+function renderCompliance() {
+  const done = bioState.filter(Boolean).length;
+  const pct = Math.round(((done / BIO.length) * 0.6 + (docs.length / 2) * 0.4) * 100);
+  $("#bioScore").innerHTML = `${pct}<small>%</small>`;
+  const bar = $("#bioBar");
+  bar.style.width = pct + "%";
+  bar.parentElement.className = "bar " + (pct >= 100 ? "" : pct >= 60 ? "warn" : "bad");
+  const missing = (docs.length < 2 ? 2 - docs.length : 0) + (BIO.length - done > 0 ? 1 : 0);
+  const pill = $("#permitPill");
+  pill.className = "pill " + (missing ? "warn" : "ok");
+  pill.textContent = missing ? `${missing} prerequisite(s) missing` : "Ready to submit";
+}
+
+/* Simulated document attach (no upload leaves the browser) */
+function attachDoc(kind) {
+  if (docs.some(d => d.kind === kind)) { toast("Already attached", kind + " is on file.", "warn"); return; }
+  docs.push({ kind, name: kind === "EIA" ? "EIA_EXP-2026-0147_v3.pdf" : "WMP_EXP-2026-0147_v2.pdf",
+              size: `${(rnd(0.6, 4.2)).toFixed(1)} MB` });
+  renderDocs(); renderCompliance();
+  toast("Document attached", kind + " recorded against the permit application.");
+}
+["dropEia:EIA", "dropWaste:WMP"].forEach(pair => {
+  const [id, kind] = pair.split(":");
+  const el = document.getElementById(id);
+  el.addEventListener("click", () => attachDoc(kind));
+  el.addEventListener("dragover", e => { e.preventDefault(); el.classList.add("over"); });
+  el.addEventListener("dragleave", () => el.classList.remove("over"));
+  el.addEventListener("drop", e => { e.preventDefault(); el.classList.remove("over"); attachDoc(kind); });
+});
+
+$("#permitForm").addEventListener("submit", e => {
+  e.preventDefault();
+  const steps = $$("#stepper .step");
+  const i = steps.findIndex(s => s.classList.contains("active"));
+  const blocked = i === 2 && docs.length < 2;
+  if (blocked) { toast("Cannot advance", "EIA and Waste Management Plan must be attached first.", "bad"); return; }
+  if (i === 3 && bioState.some(v => !v)) { toast("Cannot advance", "Biosecurity checklist is incomplete.", "bad"); return; }
+  if (i < steps.length - 1) {
+    steps[i].classList.replace("active", "done");
+    steps[i + 1].classList.add("active");
+    toast("Step validated", `Advanced to step ${i + 2} of ${steps.length}.`);
+  } else {
+    toast("Submitted", "EXP-2026-0147 forwarded to the competent authority.");
+  }
+});
+$("#saveDraft").addEventListener("click", () => toast("Draft saved", "Application retained locally."));
+
+/* ==========================================================================
+   MODULE 4 — WELL-BEING
+   ========================================================================== */
+const PHASES = [
+  { m: "March", t: "Beginning of isolation", pill: ["warn", "ELEVATED"],
+    d: "Onset of physical and social isolation. Documented rise in stress markers, including increased tobacco use, as the last flight departs and the team settles into a closed group.",
+    g: { "Stress load": 62, "Sleep quality": 71, "Group rapport": 78, "Work satisfaction": 80 },
+    a: [["Baseline screen", "Complete individual baseline questionnaire in week one."],
+        ["Habit watch", "Confidential tobacco / alcohol self-tracking opens."],
+        ["Roles", "Fix watch rotation early to reduce ambiguity friction later."]] },
+  { m: "June", t: "Midwinter", pill: ["bad", "PEAK RISK"],
+    d: "Polar night at maximum. Widespread sleep difficulty and insomnia are the dominant reported complaints; circadian drift compounds shift work on the DRS and TTC watches.",
+    g: { "Stress load": 74, "Sleep quality": 38, "Group rapport": 62, "Work satisfaction": 66 },
+    a: [["Sleep clinic", "Structured light-box and sleep-restriction module, opt-in."],
+        ["Midwinter festival", "Scheduled group ritual — strongest documented cohesion lever."],
+        ["Shift relief", "Rotate the 0000–0400Z watch weekly."]] },
+  { m: "September", t: "Maximum temporal isolation", pill: ["bad", "FRICTION MINIMUM"],
+    d: "Historically the lowest point for interpersonal rapport, with the highest rate of friction and conflict episodes even as daylight returns.",
+    g: { "Stress load": 79, "Sleep quality": 48, "Group rapport": 31, "Work satisfaction": 58 },
+    a: [["Mediation", "Neutral third-party conflict resolution slots, off the record."],
+        ["Small groups", "Break communal tasks into pairs to reduce whole-group friction."],
+        ["Comms home", "Priority bandwidth allocation for personal calls."]] },
+  { m: "Dec / Jan", t: "Continued isolation", pill: ["warn", "SATISFACTION DIP"],
+    d: "Summer arrivals restore contact, but documented drops in overall work and life satisfaction persist for the outgoing winter-over team through the handover period.",
+    g: { "Stress load": 58, "Sleep quality": 61, "Group rapport": 54, "Work satisfaction": 44 },
+    a: [["Handover load", "Cap outgoing team teaching hours at four per day."],
+        ["Reentry brief", "Pre-departure reintegration counselling."],
+        ["Recognition", "Formal close-out of the winter-over record."]] }
+];
+let phaseIdx = 0;
+
+function renderTimeline() {
+  $("#timeline").innerHTML = PHASES.map((p, i) => `
+    <div class="tnode ${i === phaseIdx ? "on" : ""}" data-i="${i}">
+      <div class="card"><b style="font-size:.85rem">${p.m}</b>
+        <div class="sub">${p.t}</div></div>
+    </div>`).join("");
+  $$(".tnode").forEach(n => n.addEventListener("click", () => { phaseIdx = +n.dataset.i; renderTimeline(); renderPhase(); }));
+}
+function renderPhase() {
+  const p = PHASES[phaseIdx];
+  $("#phaseTitle").textContent = `${p.m} · ${p.t}`;
+  $("#phaseSub").textContent = `Winter-over phase ${phaseIdx + 1} of ${PHASES.length}`;
+  const pill = $("#phasePill"); pill.className = "pill " + p.pill[0]; pill.textContent = p.pill[1];
+  $("#phaseDesc").textContent = p.d;
+  $("#phaseGauges").innerHTML = Object.entries(p.g).map(([k, v]) => {
+    const bad = (k === "Stress load" ? v > 70 : v < 45);
+    const warn = (k === "Stress load" ? v > 55 : v < 65);
+    return `<div class="g"><span>${k}</span>
+      <div class="bar ${bad ? "bad" : warn ? "warn" : ""}"><i style="width:${v}%"></i></div><b>${v}</b></div>`;
+  }).join("");
+  $("#phaseActions").innerHTML = p.a.map(([t, s]) =>
+    `<div class="row"><span class="pill info">ACTION</span><div class="txt"><b>${t}</b><span>${s}</span></div></div>`).join("");
+}
+
+/* Anonymous check-in */
+let mood = null;
+$$("#moodRow button").forEach(b => b.addEventListener("click", () => {
+  $$("#moodRow button").forEach(x => x.classList.remove("on"));
+  b.classList.add("on"); mood = +b.dataset.v;
+}));
+$("#submitCheckin").addEventListener("click", () => {
+  if (!mood) { toast("Nothing selected", "Choose how today feels first.", "warn"); return; }
+  const h = parseFloat($("#sleepH").value || "0");
+  $("#checkinNote").textContent = `Submitted anonymously · sleep ${h} h · aggregated into the station trend only.`;
+  toast("Check-in recorded", h < 5 ? "Short sleep flagged to the sleep-hygiene module." : "Thank you — nothing is attributed to you.", h < 5 ? "warn" : "");
+});
+
+/* Peer forum */
+let threads = [
+  { who: "Petrel-04", body: "Anyone else fully awake at 0300 and useless at 1400? Trying the light box at breakfast this week.", meta: "midwinter · 12 replies" },
+  { who: "Skua-11", body: "Proposal: two people cook, everyone else stays out of the galley. Fewer collisions, fewer arguments.", meta: "cohesion · 7 replies" },
+  { who: "Fulmar-02", body: "Reminder the quiet room is bookable in 40-minute blocks, no reason required.", meta: "pinned · 3 replies" }
+];
+function renderThreads() {
+  $("#threads").innerHTML = threads.map(t =>
+    `<div class="thread"><b>${t.who}</b><p>${t.body}</p><div class="meta">${t.meta}</div></div>`).join("");
+}
+$("#postBtn").addEventListener("click", () => {
+  const v = $("#postBody").value.trim();
+  if (!v) { toast("Empty post", "Write something before posting.", "warn"); return; }
+  const handles = ["Petrel", "Skua", "Fulmar", "Weddell", "Adelie"];
+  threads.unshift({ who: `${handles[Math.floor(Math.random() * handles.length)]}-${pad(Math.floor(rnd(1, 40)))}`, body: v, meta: "just now · 0 replies" });
+  $("#postBody").value = ""; renderThreads();
+  toast("Posted", "Your handle is rotated; the post is not linked to your account.");
+});
+
+/* ==========================================================================
+   MODULE 5 — INFRASTRUCTURE & HERITAGE
+   ========================================================================== */
+const SITES = [
+  { n: "Mars Oasis — long-term ecology plots", a: "Restricted", melt: "High", delay: "9 days", r: "Air only; surface melt over the moraine route" },
+  { n: "Grovnes Peninsula transect", a: "Open", melt: "Low", delay: "—", r: "Skidoo, flagged route 2" },
+  { n: "Larsemann Hills lake array", a: "Caution", melt: "Moderate", delay: "2 days", r: "Foot party; meltwater channels widening" },
+  { n: "Blue-ice runway approach", a: "Restricted", melt: "High", delay: "Indefinite", r: "Surface ponding; awaiting freeze-back" },
+  { n: "Coastal tide-gauge hut", a: "Open", melt: "Low", delay: "—", r: "Shoreline walk at low water" }
+];
+function renderSites() {
+  $("#siteRows").innerHTML = SITES.map(s => {
+    const cls = s.a === "Open" ? "ok" : s.a === "Caution" ? "warn" : "bad";
+    return `<tr><td>${s.n}</td><td><span class="pill ${cls}">${s.a.toUpperCase()}</span></td>
+      <td class="mono">${s.melt}</td><td class="mono">${s.delay}</td><td style="color:var(--text-dim)">${s.r}</td></tr>`;
+  }).join("");
+  $("#sitePill").textContent = `${SITES.filter(s => s.a === "Restricted").length} sites restricted`;
+}
+
+const HERITAGE = [
+  { n: "Historic timber hut A (1957)", set: 42, rot: 68, alert: "Structural alert", cls: "bad",
+    note: "North-east sill 42 mm below datum; thaw settlement accelerating with active-layer deepening." },
+  { n: "Supply depot & sledge store", set: 11, rot: 34, alert: "Elevated", cls: "warn",
+    note: "Moisture ingress at the roof-wall junction after successive rain events." },
+  { n: "Legacy magnetic observatory", set: 4, rot: 12, alert: "Monitor", cls: "ok",
+    note: "Stable on rock anchor; annual survey only." }
+];
+function renderHeritage() {
+  $("#heritageCards").innerHTML = HERITAGE.map(h => `
+    <div class="sitecard">
+      <header><b style="font-size:.84rem">${h.n}</b><span class="pill ${h.cls}">${h.alert.toUpperCase()}</span></header>
+      <div class="label">Foundation settlement</div>
+      <div class="tilt"><i style="width:${clamp(h.set * 2, 4, 100)}%"></i></div>
+      <div class="axis"><span>0 mm</span><span class="mono">${h.set} mm below datum</span></div>
+      <div class="label" style="margin-top:8px">Timber rot index</div>
+      <div class="bar ${h.rot > 60 ? "bad" : h.rot > 30 ? "warn" : ""}"><i style="width:${h.rot}%"></i></div>
+      <p class="sub" style="margin-top:8px">${h.note}</p>
+    </div>`).join("");
+}
+
+/* Observation intake */
+let obs = [];
+function renderObsSelect() {
+  $("#obsAsset").innerHTML = [...HERITAGE.map(h => h.n), ...SITES.map(s => s.n)]
+    .map(n => `<option>${n}</option>`).join("");
+}
+function renderObsLog() {
+  $("#obsLog").innerHTML = obs.length ? obs.map(o => {
+    const cls = o.sev === "Structural alert" ? "bad" : o.sev === "Elevated" ? "warn" : "info";
+    return `<div class="row"><span class="pill ${cls}">${o.sev.toUpperCase()}</span>
+      <div class="txt"><b>${o.asset} — ${o.type}</b><span>${o.notes || "No further notes."}</span>
+      <span class="mono" style="color:var(--text-faint)">${o.at}</span></div></div>`;
+  }).join("") : `<div class="row"><span class="pill">EMPTY</span><div class="txt"><b>No observations filed this watch</b></div></div>`;
+}
+$("#obsSubmit").addEventListener("click", () => {
+  const d = new Date();
+  obs.unshift({
+    asset: $("#obsAsset").value, type: $("#obsType").value, sev: $("#obsSev").value,
+    notes: $("#obsNotes").value.trim(),
+    at: `${d.toISOString().slice(0, 10)} ${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}Z`
+  });
+  $("#obsNotes").value = "";
+  renderObsLog();
+  toast("Observation filed", "Queued for the preservation work-order list.",
+        $("#obsSev").value === "Structural alert" ? "bad" : "");
+});
+
+/* ==========================================================================
+   BOOTSTRAP + LIVE SIMULATION LOOPS
+   ========================================================================== */
+function boot() {
+  renderPasses(); renderSky(); updateOrbitKpis(); renderKp(); renderMaint();
+  renderSpark(); renderWind(); renderRain(); buildLidar();
+  renderBio(); renderDocs(); renderCompliance();
+  renderTimeline(); renderPhase(); renderThreads();
+  renderSites(); renderHeritage(); renderObsSelect(); renderObsLog();
+  $("#vVis").textContent = `${rnd(0.3, 4).toFixed(1)} km`;
+}
+boot();
+
+setInterval(stepLidar, 700);                 // LiDAR curtain scroll
+setInterval(() => { renderWind(); renderRain(); }, 9000);
+setInterval(renderSpark, 21000);
+setInterval(renderKp, 26000);
+
+/* Occasional operational events, so the console feels live */
+const EVENTS = [
+  ["Storm watch", "Kp forecast revised upward for the next synoptic period.", "warn"],
+  ["DRS", "Pass ingest complete; checksum verified on the raid array.", ""],
+  ["Met", "Visibility fell below 1 km — blowing snow criteria met.", "warn"],
+  ["Heritage", "Automated tilt sensor on timber hut A reported +2 mm.", "bad"],
+  ["Well-being", "Anonymous check-in participation at 82% this week.", ""]
+];
+setInterval(() => {
+  if (Math.random() < 0.45) {
+    const [a, b, c] = EVENTS[Math.floor(Math.random() * EVENTS.length)];
+    toast(a, b, c);
+  }
+}, 17000);
+</script>
+</body>
+</html>
