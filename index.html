@@ -400,6 +400,7 @@ footer{border-top:1px solid var(--line);padding:22px 0;color:var(--text-faint);f
 </head>
 
 <body>
+  
 <div id="login-screen">
   <div class="login-card">
     <div class="login-top">
@@ -921,9 +922,24 @@ function restoreSession() {
 }
 
 function getSupabaseClient() {
+  const env = (typeof window !== "undefined" && window.__ENV__) || {};
   const config = window.__SUPABASE_CONFIG__ || {};
-  const url = config.url || window.SUPABASE_URL || "";
-  const anonKey = config.anonKey || window.SUPABASE_ANON_KEY || "";
+
+  const url =
+    config.url ||
+    env.SUPABASE_URL ||
+    window.SUPABASE_URL ||
+    (typeof process !== "undefined" && process.env ? process.env.SUPABASE_URL : "") ||
+    "";
+
+  const anonKey =
+    config.anonKey ||
+    env.SUPABASE_PUBLISHABLE_KEY ||
+    env.SUPABASE_ANON_KEY ||
+    window.SUPABASE_PUBLISHABLE_KEY ||
+    window.SUPABASE_ANON_KEY ||
+    (typeof process !== "undefined" && process.env ? process.env.SUPABASE_PUBLISHABLE_KEY || process.env.SUPABASE_ANON_KEY : "") ||
+    "";
 
   if (!url || !anonKey || !window.supabase) return null;
   return window.supabase.createClient(url, anonKey, {
