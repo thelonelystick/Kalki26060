@@ -226,6 +226,36 @@ td.mono,th.mono{font-family:var(--mono)}
 .field textarea{resize:vertical;min-height:74px;font-family:var(--mono);font-size:.76rem}
 
 /* ==========================================================================
+   LOGIN SCREEN
+   ========================================================================== */
+#app-shell{display:none}
+body.logged-in #app-shell{display:block}
+body.logged-in #login-screen{display:none}
+#login-screen{
+  min-height:100vh;display:grid;place-items:center;padding:24px;
+  background:
+    radial-gradient(circle at top, rgba(79,224,192,.18), transparent 35%),
+    linear-gradient(180deg, rgba(5,11,20,1), rgba(8,17,29,1));
+}
+.login-card{
+  width:min(100%,420px);background:linear-gradient(180deg,rgba(16,34,50,.85),rgba(8,17,29,.96));
+  border:1px solid var(--line);border-radius:22px;padding:30px 26px;box-shadow:var(--shadow);
+}
+.login-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+.login-brand{display:flex;align-items:center;gap:11px;font-weight:800;letter-spacing:-.02em}
+.login-brand .glyph{width:36px;height:36px;border-radius:11px;display:grid;place-items:center;background:linear-gradient(140deg,var(--aurora),var(--signal));color:#04121a;font-family:var(--mono);font-weight:700;box-shadow:0 0 18px rgba(79,224,192,.35)}
+.login-badge{font-family:var(--mono);font-size:.64rem;letter-spacing:.14em;text-transform:uppercase;color:var(--aurora);border:1px solid var(--line-strong);background:var(--aurora-dim);padding:6px 10px;border-radius:999px}
+.login-card h1{font-size:clamp(1.8rem,2vw,2.2rem);letter-spacing:-.04em;margin:10px 0 6px}
+.login-card p{color:var(--text-dim);font-size:.85rem;margin-bottom:16px}
+.login-form .field{margin-bottom:14px}
+.login-form .field input{padding:12px 14px}
+.login-form button{width:100%;margin-top:8px}
+.login-meta{margin-top:14px;font-size:.72rem;color:var(--text-faint);font-family:var(--mono);line-height:1.6}
+.login-status{min-height:22px;margin-top:10px;font-size:.78rem;color:var(--text-dim)}
+.login-status.error{color:var(--alarm)}
+.login-status.success{color:var(--aurora)}
+
+/* ==========================================================================
    5. MODULE 1 — ORBIT SKY TRACKER (radar-style polar plot)
    ========================================================================== */
 .skyplot{position:relative;aspect-ratio:1;max-width:400px;margin:0 auto}
@@ -370,7 +400,41 @@ footer{border-top:1px solid var(--line);padding:22px 0;color:var(--text-faint);f
 </head>
 
 <body>
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-top">
+      <div class="login-brand">
+        <div class="glyph">PO</div>
+        <div>Polaris Ops</div>
+      </div>
+      <div class="login-badge">Secure</div>
+    </div>
+    <h1>Sign in</h1>
+    <p>Access the Antarctic operations console using the credentials stored in the Supabase table named login.</p>
 
+    <form id="loginForm" class="login-form">
+      <div class="field">
+        <label for="loginEmail">Email or username</label>
+        <input id="loginEmail" name="email" type="text" placeholder="Enter email or username" autocomplete="username" required />
+      </div>
+      <div class="field">
+        <label for="loginPassword">Password</label>
+        <input id="loginPassword" name="password" type="password" placeholder="Enter password" autocomplete="current-password" required />
+      </div>
+      <button class="btn primary" type="submit">Log in</button>
+    </form>
+
+    <div id="loginStatus" class="login-status" aria-live="polite"></div>
+
+    <div class="login-meta">
+      Supabase table: login<br />
+      Required fields: email (or username) and password<br />
+      Optional config: set window.__SUPABASE_CONFIG__ or the global Supabase client before load.
+    </div>
+  </div>
+</div>
+
+<div id="app-shell">
 <!-- ==========================================================================
      TOP BAR
      ========================================================================== -->
@@ -804,7 +868,9 @@ footer{border-top:1px solid var(--line);padding:22px 0;color:var(--text-faint);f
 </footer>
 
 <div id="toasts" aria-live="polite"></div>
+</div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 /* ==========================================================================
    CLIENT-SIDE BEHAVIOUR — NO FABRICATED TELEMETRY
@@ -816,12 +882,120 @@ footer{border-top:1px solid var(--line);padding:22px 0;color:var(--text-faint);f
 const $ = (s, r=document) => r.querySelector(s);
 const $$ = (s, r=document) => [...r.querySelectorAll(s)];
 const pad = n => String(n).padStart(2, "0");
+const LOGIN_TABLE = "login";
+
+const loginForm = $("#loginForm");
+const loginStatus = $("#loginStatus");
 
 function toast(title, msg, kind="") {
   const el=document.createElement("div"); el.className="toast "+kind;
   el.innerHTML=`<b>${title}</b>${msg}`; $("#toasts").appendChild(el);
   setTimeout(()=>el.remove(),4200);
 }
+
+function setLoginMessage(msg, kind="") {
+  if (!loginStatus) return;
+  loginStatus.textContent = msg;
+  loginStatus.className = "login-status" + (kind ? ` ${kind}` : "");
+}
+
+function setUserSession(user) {
+  localStorage.setItem("polaris_login_user", JSON.stringify(user));
+  document.body.classList.add("logged-in");
+}
+
+function restoreSession() {
+  const stored = localStorage.getItem("polaris_login_user");
+  if (stored) {
+    try {
+      const user = JSON.parse(stored);
+      if (user && user.email) {
+        document.body.classList.add("logged-in");
+        return;
+      }
+    } catch (error) {
+      console.warn("Unable to restore login session", error);
+    }
+  }
+  document.body.classList.remove("logged-in");
+}
+
+function getSupabaseClient() {
+  const config = window.__SUPABASE_CONFIG__ || {};
+  const url = config.url || window.SUPABASE_URL || "";
+  const anonKey = config.anonKey || window.SUPABASE_ANON_KEY || "";
+
+  if (!url || !anonKey || !window.supabase) return null;
+  return window.supabase.createClient(url, anonKey, {
+    auth: { persistSession: false, autoRefreshToken: false }
+  });
+}
+
+async function validateSupabaseLogin(email, password) {
+  const client = getSupabaseClient();
+  const input = String(email || "").trim();
+
+  if (!client) {
+    const demoEmail = "admin@polaris.local";
+    const demoPassword = "polaris123";
+    if (input.toLowerCase() === demoEmail && password === demoPassword) {
+      return { name: "Operations Admin", email: demoEmail, username: "admin" };
+    }
+    throw new Error("Supabase credentials are not configured. Use admin@polaris.local / polaris123 or add your Supabase URL and anon key.");
+  }
+
+  const { data, error } = await client.from(LOGIN_TABLE).select("*").or(`email.eq.${input},username.eq.${input}`).limit(20);
+  if (error) {
+    throw new Error(error.message || "Unable to access the login table.");
+  }
+
+  const match = (data || []).find((row) => {
+    const rowEmail = String(row.email || "").trim().toLowerCase();
+    const rowUsername = String(row.username || "").trim().toLowerCase();
+    const rowPassword = String(row.password || "");
+    const value = input.trim().toLowerCase();
+    return rowPassword === password && (rowEmail === value || rowUsername === value);
+  });
+
+  if (!match) {
+    throw new Error("Invalid email/username or password.");
+  }
+
+  return {
+    email: String(match.email || match.username || input),
+    username: String(match.username || match.email || input),
+    name: match.name || match.username || match.email || "Station User"
+  };
+}
+
+loginForm?.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const email = $("#loginEmail").value.trim();
+  const password = $("#loginPassword").value;
+
+  if (!email || !password) {
+    setLoginMessage("Please enter both your email/username and password.", "error");
+    return;
+  }
+
+  setLoginMessage("Checking credentials…");
+
+  try {
+    const user = await validateSupabaseLogin(email, password);
+    setLoginMessage(`Welcome, ${user.name}.`, "success");
+    setUserSession(user);
+    toast("Login successful", "Redirecting to the operations console.");
+    setTimeout(() => {
+      document.body.classList.add("logged-in");
+      loginForm.reset();
+      setLoginMessage("");
+    }, 500);
+  } catch (error) {
+    const msg = error.message || "Login failed.";
+    setLoginMessage(msg, "error");
+    toast("Login failed", msg, "bad");
+  }
+});
 
 /* Module navigation */
 $$("#modnav .tab").forEach(tab=>tab.addEventListener("click",()=>{
@@ -934,6 +1108,7 @@ $("#obsSubmit")?.addEventListener("click",()=>{
 });
 
 /* Initial state: explicitly empty until real sources are connected. */
+restoreSession();
 markUnavailable(); renderMaint(); renderObsSelect(); renderObsLog(); renderThreads(); renderDocs();
 </script>
 </body>
