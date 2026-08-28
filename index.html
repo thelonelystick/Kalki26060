@@ -874,10 +874,10 @@ footer{border-top:1px solid var(--line);padding:22px 0;color:var(--text-faint);f
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 window.__SUPABASE_CONFIG__ = {
-  url: "https://alymfzfgpqcvbcptwafg.supabase.co",
+  url: "https://alymfzfgpqcvbcptwafg.supabase.co/rest/v1",
   anonKey: "sb_publishable_-9n6AAFZlqfbLplrBfNo2w_bT7QnD9v"
 };
-window.SUPABASE_URL = "https://alymfzfgpqcvbcptwafg.supabase.co";
+window.SUPABASE_URL = "https://alymfzfgpqcvbcptwafg.supabase.co/rest/v1";
 window.SUPABASE_PUBLISHABLE_KEY = "sb_publishable_-9n6AAFZlqfbLplrBfNo2w_bT7QnD9v";
 
 /* ==========================================================================
@@ -973,17 +973,21 @@ async function validateSupabaseLogin(email, password) {
     throw new Error(error.message || "Supabase is not configured.");
   }
 
-  const { data, error } = await client
-    .from(LOGIN_TABLE)
-    .select("id,email,username,password,name")
-    .or(`email.eq.${input},username.eq.${input}`)
-    .limit(20);
+  const [emailResult, usernameResult] = await Promise.all([
+    client.from(LOGIN_TABLE).select("id,email,username,password,name").eq("email", input).limit(20),
+    client.from(LOGIN_TABLE).select("id,email,username,password,name").eq("username", input).limit(20)
+  ]);
 
-  if (error) {
-    throw new Error(error.message || "Unable to access the login table.");
+  const emailError = emailResult.error;
+  const usernameError = usernameResult.error;
+  if (emailError && usernameError) {
+    throw new Error(emailError.message || usernameError.message || "Unable to access the login table.");
   }
 
-  const match = (data || []).find((row) => {
+  const rows = [...(emailResult.data || []), ...(usernameResult.data || [])];
+  const uniqueRows = rows.filter((row, index, arr) => arr.findIndex(candidate => candidate.id === row.id) === index);
+
+  const match = uniqueRows.find((row) => {
     const rowEmail = String(row.email || "").trim().toLowerCase();
     const rowUsername = String(row.username || "").trim().toLowerCase();
     const rowPassword = String(row.password || "");
