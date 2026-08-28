@@ -918,11 +918,13 @@ function restoreSession() {
     try {
       const user = JSON.parse(stored);
       if (user && user.email) {
-        document.body.classList.add("logged-in");
-        return;
+        // Do not auto-authenticate from stale localStorage on page load.
+        // Always require a fresh login at startup so the login screen is shown first.
+        localStorage.removeItem("polaris_login_user");
       }
     } catch (error) {
       console.warn("Unable to restore login session", error);
+      localStorage.removeItem("polaris_login_user");
     }
   }
   document.body.classList.remove("logged-in");
@@ -1139,7 +1141,7 @@ $("#obsSubmit")?.addEventListener("click",()=>{
   $("#obsNotes").value="";renderObsLog();toast("Observation recorded locally","No external system has received this observation.");
 });
 
-/* Initial state: explicitly empty until real sources are connected. */
+/* Initial state: show the login page first and never auto-open the app from stale storage. */
 restoreSession();
 markUnavailable(); renderMaint(); renderObsSelect(); renderObsLog(); renderThreads(); renderDocs();
 </script>
