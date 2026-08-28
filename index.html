@@ -873,6 +873,13 @@ footer{border-top:1px solid var(--line);padding:22px 0;color:var(--text-faint);f
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
+window.__SUPABASE_CONFIG__ = {
+  url: "https://alymfzfgpqcvbcptwafg.supabase.co",
+  anonKey: "sb_publishable_-9n6AAFZlqfbLplrBfNo2w_bT7QnD9v"
+};
+window.SUPABASE_URL = "https://alymfzfgpqcvbcptwafg.supabase.co";
+window.SUPABASE_PUBLISHABLE_KEY = "sb_publishable_-9n6AAFZlqfbLplrBfNo2w_bT7QnD9v";
+
 /* ==========================================================================
    CLIENT-SIDE BEHAVIOUR — NO FABRICATED TELEMETRY
    ==========================================================================
@@ -923,7 +930,7 @@ function restoreSession() {
 
 function getSupabaseClient() {
   const env = (typeof window !== "undefined" && window.__ENV__) || {};
-  const config = window.__SUPABASE_CONFIG__ || {};
+  const config = (typeof window !== "undefined" && window.__SUPABASE_CONFIG__) || {};
 
   const url =
     config.url ||
@@ -941,26 +948,35 @@ function getSupabaseClient() {
     (typeof process !== "undefined" && process.env ? process.env.SUPABASE_PUBLISHABLE_KEY || process.env.SUPABASE_ANON_KEY : "") ||
     "";
 
-  if (!url || !anonKey || !window.supabase) return null;
+  if (!url || !anonKey || !window.supabase) {
+    throw new Error("Supabase is not configured. Set SUPABASE_URL and SUPABASE_PUBLISHABLE_KEY before login.");
+  }
+
   return window.supabase.createClient(url, anonKey, {
     auth: { persistSession: false, autoRefreshToken: false }
   });
 }
 
 async function validateSupabaseLogin(email, password) {
-  const client = getSupabaseClient();
   const input = String(email || "").trim();
 
-  if (!client) {
-    const demoEmail = "admin@polaris.local";
-    const demoPassword = "polaris123";
-    if (input.toLowerCase() === demoEmail && password === demoPassword) {
-      return { name: "Operations Admin", email: demoEmail, username: "admin" };
-    }
-    throw new Error("Supabase credentials are not configured. Use admin@polaris.local / polaris123 or add your Supabase URL and anon key.");
+  if (!input || !password) {
+    throw new Error("Email/username and password are required.");
   }
 
-  const { data, error } = await client.from(LOGIN_TABLE).select("*").or(`email.eq.${input},username.eq.${input}`).limit(20);
+  let client;
+  try {
+    client = getSupabaseClient();
+  } catch (error) {
+    throw new Error(error.message || "Supabase is not configured.");
+  }
+
+  const { data, error } = await client
+    .from(LOGIN_TABLE)
+    .select("id,email,username,password,name")
+    .or(`email.eq.${input},username.eq.${input}`)
+    .limit(20);
+
   if (error) {
     throw new Error(error.message || "Unable to access the login table.");
   }
