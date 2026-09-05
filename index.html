@@ -139,6 +139,17 @@ button,input,select,textarea{font:inherit;color:inherit}
   .model-controls .sub{width:100%;margin-left:0}
 }
 
+/* Keep each module focused on one useful operational task. */
+.simple-state{max-width:760px}
+.simple-state .metric{margin-top:8px}
+.simple-state .row{margin-top:12px}
+#m1 > .grid.g3,#m1 > .grid.g-1-2,#m1 > .grid.g-2-1{display:none}
+#m2 > .grid.g-2-1 > .panel:nth-child(2),#m2 > .panel:not(.simple-state){display:none}
+#m2 > .grid.g-2-1{grid-template-columns:1fr}
+#m3 > .grid,#m3 > .panel:not(.simple-state),
+#m4 > .grid,#m4 > .panel:not(.simple-state),
+#m5 > .grid,#m5 > .panel:not(.simple-state){display:none}
+
 /* scrollbars */
 ::-webkit-scrollbar{width:10px;height:10px}
 ::-webkit-scrollbar-track{background:var(--ice-850)}
@@ -564,7 +575,6 @@ footer{border-top:1px solid var(--line);padding:22px 0;color:var(--text-faint);f
     </div>
     <div class="model-controls">
       <button class="btn sm ghost" type="button" id="modelReset">Reset view</button>
-      <button class="btn sm ghost" type="button" id="modelToggleSpin">Start rotation</button>
       <span class="sub">Model source: assets/landscape.glb</span>
     </div>
   </div>
@@ -645,7 +655,7 @@ footer{border-top:1px solid var(--line);padding:22px 0;color:var(--text-faint);f
   <div class="modhead">
     <span class="num">MODULE 02</span>
     <h1>Access Infrastructure</h1>
-    <p>Review station infrastructure access, routes, environmental conditions, and the operational constraints that shape each visit.</p>
+    <p>Review the station access state and current route conditions.</p>
   </div>
 
   <div class="grid g-2-1" style="margin-bottom:16px">
@@ -720,6 +730,12 @@ footer{border-top:1px solid var(--line);padding:22px 0;color:var(--text-faint);f
       <div><div class="label">Satellite validation match</div><div class="metric" id="lVal">—<small>% over snow</small></div></div>
     </div>
   </div>
+
+  <div class="panel simple-state">
+    <div class="phead"><div><h2>Infrastructure status</h2><div class="sub">One clear view of access conditions</div></div><span class="pill warn">NO DATA</span></div>
+    <div class="row"><span class="pill">WAITING</span><div class="txt"><b>Weather and route feed not connected</b><span>Connect an authoritative station feed to show wind, temperature, and access restrictions.</span></div></div>
+  </div>
+
 </section>
 
 <!-- ==========================================================================
@@ -729,7 +745,7 @@ footer{border-top:1px solid var(--line);padding:22px 0;color:var(--text-faint);f
   <div class="modhead">
     <span class="num">MODULE 03</span>
     <h1>Utilities</h1>
-    <p>Track power usage and station analytics to understand demand, identify trends, and support efficient operations.</p>
+    <p>Check the current station utilities state.</p>
   </div>
 
   <div class="grid g-2-1" style="margin-bottom:16px">
@@ -810,6 +826,13 @@ footer{border-top:1px solid var(--line);padding:22px 0;color:var(--text-faint);f
       </div>
     </div>
   </div>
+
+  <div class="panel simple-state">
+    <div class="phead"><div><h2>Utilities status</h2><div class="sub">Power and station resource summary</div></div><span class="pill">NO DATA</span></div>
+    <div class="metric">—<small> kW</small></div>
+    <div class="sub">Connect the station utilities feed to display current demand.</div>
+  </div>
+
 </section>
 
 <!-- ==========================================================================
@@ -819,7 +842,7 @@ footer{border-top:1px solid var(--line);padding:22px 0;color:var(--text-faint);f
   <div class="modhead">
     <span class="num">MODULE 04</span>
     <h1>Data Transfer Protocol</h1>
-    <p>Coordinate secure data movement between station systems with clear transfer status, protocol visibility, and handoff tracking.</p>
+    <p>Check whether a station data transfer is active.</p>
   </div>
 
   <div class="grid g-1-2" style="margin-bottom:16px">
@@ -869,6 +892,12 @@ footer{border-top:1px solid var(--line);padding:22px 0;color:var(--text-faint);f
       <button class="btn primary sm" id="postBtn">Post pseudonymously</button>
     </div>
   </div>
+
+  <div class="panel simple-state">
+    <div class="phead"><div><h2>Data transfer status</h2><div class="sub">Current station link and handoff state</div></div><span class="pill">NO DATA</span></div>
+    <div class="row"><span class="pill">WAITING</span><div class="txt"><b>No transfer is active</b><span>Connect the authenticated transfer service to show queue and delivery status.</span></div></div>
+  </div>
+
 </section>
 
 <!-- ==========================================================================
@@ -878,7 +907,7 @@ footer{border-top:1px solid var(--line);padding:22px 0;color:var(--text-faint);f
   <div class="modhead">
     <span class="num">MODULE 05</span>
     <h1>Alerts</h1>
-    <p>Surface priority alerts in one place so the station team can quickly review, triage, and respond to issues that need attention.</p>
+    <p>Review the few issues that need attention.</p>
   </div>
 
   <div class="grid g2" style="margin-bottom:16px">
@@ -923,6 +952,12 @@ footer{border-top:1px solid var(--line);padding:22px 0;color:var(--text-faint);f
     <button class="btn primary" id="obsSubmit">File observation</button>
     <div class="list" style="margin-top:14px" id="obsLog"></div>
   </div>
+
+  <div class="panel simple-state">
+    <div class="phead"><div><h2>Alerts</h2><div class="sub">Priority issues requiring attention</div></div><span class="pill">NO DATA</span></div>
+    <div class="row"><span class="pill">CLEAR</span><div class="txt"><b>No connected alerts</b><span>Alerts will appear here when the station alert feed is connected.</span></div></div>
+  </div>
+
 </section>
 
 </main>
@@ -1226,7 +1261,6 @@ const modelStage = document.querySelector("#modelStage");
 const modelStatus = document.querySelector("#modelStatus");
 const modelPill = document.querySelector("#modelPill");
 const resetModelButton = document.querySelector("#modelReset");
-const toggleSpinButton = document.querySelector("#modelToggleSpin");
 
 if (modelStage && modelStatus && modelPill) {
   const scene = new THREE.Scene();
@@ -1260,8 +1294,6 @@ if (modelStage && modelStatus && modelPill) {
 
   let model;
   let initialCamera;
-  let spinning = false;
-
   function resizeModel() {
     const width = modelStage.clientWidth;
     const height = modelStage.clientHeight;
@@ -1294,17 +1326,30 @@ if (modelStage && modelStatus && modelPill) {
   }
 
   resetModelButton?.addEventListener("click", resetModelView);
-  toggleSpinButton?.addEventListener("click", () => {
-    spinning = !spinning;
-    toggleSpinButton.textContent = spinning ? "Stop rotation" : "Start rotation";
-  });
   window.addEventListener("resize", resizeModel);
   window.addEventListener("polaris:login-state", resizeModel);
   new ResizeObserver(resizeModel).observe(modelStage);
   resizeModel();
 
-  gltfLoader.load(
-    MODEL_URL,
+  async function getCachedModelUrl() {
+    if (!("caches" in window)) return MODEL_URL;
+
+    const cache = await caches.open("polaris-model-v1");
+    const cached = await cache.match(MODEL_URL);
+    if (cached) {
+      modelStatus.textContent = "Loading cached landscape model…";
+      return URL.createObjectURL(await cached.blob());
+    }
+
+    modelStatus.textContent = "Downloading landscape model for first use…";
+    const response = await fetch(MODEL_URL);
+    if (!response.ok) throw new Error(`Model request failed (${response.status})`);
+    await cache.put(MODEL_URL, response.clone());
+    return URL.createObjectURL(await response.blob());
+  }
+
+  getCachedModelUrl().then((modelUrl) => gltfLoader.load(
+    modelUrl,
     (gltf) => {
       model = gltf.scene;
       scene.add(model);
@@ -1327,11 +1372,16 @@ if (modelStage && modelStatus && modelPill) {
       modelPill.textContent = "UNAVAILABLE";
       modelPill.className = "pill bad";
     }
-  );
+  )).catch((error) => {
+    console.error("Unable to prepare cached landscape model", error);
+    modelStatus.textContent = "Unable to load the landscape model. Check the asset path and network connection.";
+    modelStatus.classList.add("error");
+    modelPill.textContent = "UNAVAILABLE";
+    modelPill.className = "pill bad";
+  });
 
   function renderModel() {
     requestAnimationFrame(renderModel);
-    if (spinning && model) model.rotation.y += 0.0025;
     controls.update();
     renderer.render(scene, camera);
   }
