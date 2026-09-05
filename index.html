@@ -81,15 +81,15 @@
   <div class="wrap topbar-inner">
     <div class="brand">
       <div class="glyph">PO</div>
-      <div>Polaris Ops<small>Bharati Station · 69°S</small></div>
+      <div>Polaris Ops</div>
     </div>
 
     <nav class="modnav" id="modnav" role="tablist" aria-label="Operational modules">
-      <button class="tab" role="tab" data-mod="m1" aria-selected="true">01 · Twin Model</button>
-      <button class="tab" role="tab" data-mod="m2" aria-selected="false">02 · Infrastructure</button>
-      <button class="tab" role="tab" data-mod="m3" aria-selected="false">03 · Utilities</button>
-      <button class="tab" role="tab" data-mod="m4" aria-selected="false">04 · Data Transfer</button>
-      <button class="tab" role="tab" data-mod="m5" aria-selected="false">05 · Alerts</button>
+      <button class="tab" role="tab" data-mod="m1" aria-selected="true">Twin Model</button>
+      <button class="tab" role="tab" data-mod="m2" aria-selected="false">Infrastructure</button>
+      <button class="tab" role="tab" data-mod="m3" aria-selected="false">Utilities</button>
+      <button class="tab" role="tab" data-mod="m4" aria-selected="false">Data Transfer</button>
+      <button class="tab" role="tab" data-mod="m5" aria-selected="false">Alerts</button>
     </nav>
 
     <button class="btn ghost sm" id="logoutButton" type="button">Log out</button>
@@ -116,9 +116,7 @@
     </div>
   </div>
   <div class="modhead">
-    <span class="num">MODULE 01</span>
     <h1>View Twin Model</h1>
-    <p>Inspect the station twin in context, monitor live system state, and keep the operational picture visible from one taskbar.</p>
   </div>
 
   <div class="grid g3" style="margin-bottom:16px">
@@ -144,7 +142,7 @@
 
   <div class="panel model-viewer">
     <div class="phead">
-      <div><h2>Station Landscape Model</h2><div class="sub">Lightweight preview · open 3D view only when needed</div></div>
+      <div><h2>Station Landscape Model</h2></div>
       <span class="pill info" id="modelPill">PREVIEW</span>
     </div>
     <div class="model-preview" id="modelPreview" aria-label="Station landscape preview">
@@ -167,7 +165,6 @@
       <button class="btn sm primary" type="button" id="modelOpen">Open 3D model</button>
       <button class="btn sm ghost" type="button" id="modelReset" disabled>Reset view</button>
       <button class="btn sm ghost" type="button" id="modelClose" hidden>Close 3D model</button>
-      <span class="sub">The detailed model loads only after opening it.</span>
     </div>
   </div>
 
@@ -245,49 +242,7 @@
      ========================================================================== -->
 <section class="module" id="m2" role="tabpanel">
   <div class="modhead">
-    <span class="num">MODULE 02</span>
     <h1>Access Infrastructure</h1>
-    <p>Review the station access state and current route conditions.</p>
-  </div>
-
-  <div class="grid g-2-1" style="margin-bottom:16px">
-    <div class="panel">
-      <div class="phead">
-        <div><h2>Rain &amp; Slush Advisory</h2><div class="sub">Liquid precipitation monitor · T &gt; 0 °C</div></div>
-        <span class="pill warn" id="rainPill">WATCH</span>
-      </div>
-      <div class="label">Air temperature</div>
-      <div class="metric" id="rTemp">—<small>°C</small></div>
-      <div class="bar warn" style="margin:10px 0 4px"><i id="rTempBar" style="width:72%"></i></div>
-      <div class="sub">Freeze threshold at 0 °C · Awaiting temperature feed</div>
-
-      <div class="list" style="margin-top:14px">
-        <div class="row"><span class="pill bad">RUNWAY</span><div class="txt"><b>Gravel airstrip: rain-on-gravel risk</b><span>Freeze-back would render the strip unusable within one cycle. Aviation hold recommended.</span></div></div>
-        <div class="row"><span class="pill warn">SLUSH</span><div class="txt"><b>Tent line &amp; instrument field</b><span>Melt ingress under skirts; elevate field instruments 300 mm.</span></div></div>
-        <div class="row"><span class="pill info">FABRIC</span><div class="txt"><b>Module cladding</b><span>Envelope specified for dry snow; log water tracking at joints daily.</span></div></div>
-      </div>
-      <div style="display:flex;gap:8px;margin-top:12px">
-        <button class="btn sm primary" id="declHold">Declare aviation hold</button>
-        <button class="btn sm ghost" id="logSlush">Log slush observation</button>
-      </div>
-    </div>
-  </div>
-
-  <div class="panel">
-    <div class="phead">
-      <div><h2>Ground-Based Remote Sensing Integrator</h2><div class="sub">MiniMPL LiDAR · backscatter curtain 0–15 km · PBL, cloud, aerosol retrieval</div></div>
-      <div style="display:flex;gap:8px">
-        <span class="pill info" id="pblPill">PBL 640 m</span>
-        <button class="btn sm ghost" id="lidarToggle">Pause stream</button>
-      </div>
-    </div>
-    <div class="lidar" id="lidar"><div class="pbl" id="pblLine"><span>PBL</span></div></div>
-    <div class="axis"><span>-3 h</span><span>-2 h</span><span>-1 h</span><span>now</span></div>
-    <div class="grid g3" style="margin-top:14px">
-      <div><div class="label">Cloud base / thickness</div><div class="metric" id="lCloud">1.9<small>km / 0.8 km</small></div></div>
-      <div><div class="label">Aerosol layer top</div><div class="metric" id="lAer">4.3<small>km</small></div></div>
-      <div><div class="label">Satellite validation match</div><div class="metric" id="lVal">—<small>% over snow</small></div></div>
-    </div>
   </div>
 
   <div class="panel simple-state">
@@ -306,9 +261,7 @@
      ========================================================================== -->
 <section class="module" id="m3" role="tabpanel">
   <div class="modhead">
-    <span class="num">MODULE 03</span>
     <h1>Utilities</h1>
-    <p>Check the current station utilities state.</p>
   </div>
 
   <div class="grid g-2-1" style="margin-bottom:16px">
@@ -415,9 +368,7 @@
      ========================================================================== -->
 <section class="module" id="m4" role="tabpanel">
   <div class="modhead">
-    <span class="num">MODULE 04</span>
     <h1>Data Transfer Protocol</h1>
-    <p>Check whether a station data transfer is active.</p>
   </div>
 
   <div class="grid g-1-2" style="margin-bottom:16px">
@@ -469,8 +420,8 @@
   </div>
 
   <div class="panel simple-state">
-    <div class="phead"><div><h2>Upload data</h2><div class="sub">Queue a local file for the authenticated transfer service</div></div><span class="pill info">LOCAL QUEUE</span></div>
-    <label class="drop" for="dataUpload"><b>Select data file</b><br /><span class="sub">The file remains local until a transfer service is connected.</span></label>
+    <div class="phead"><div><h2>Upload data</h2><div class="sub">Choose a file to add to the transfer queue</div></div><span class="pill info">LOCAL QUEUE</span></div>
+    <label class="drop" for="dataUpload"><b>Select data file</b><br /><span class="sub">Files are queued in this browser.</span></label>
     <input id="dataUpload" type="file" hidden />
     <div class="row" id="uploadStatus"><span class="pill">WAITING</span><div class="txt"><b>No file queued</b><span>Choose a file to prepare it for transfer.</span></div></div>
   </div>
@@ -482,9 +433,7 @@
      ========================================================================== -->
 <section class="module" id="m5" role="tabpanel">
   <div class="modhead">
-    <span class="num">MODULE 05</span>
     <h1>Alerts</h1>
-    <p>Review the few issues that need attention.</p>
   </div>
 
   <div class="grid g2" style="margin-bottom:16px">
@@ -540,7 +489,7 @@
 </main>
 
 <footer>
-  <div class="wrap"><span>POLARIS OPS · Antarctic station console</span><span>Telemetry source: not connected · Local actions are not transmitted</span></div>
+  <div class="wrap"><span>POLARIS OPS · Antarctic station console</span></div>
 </footer>
 
 <div id="toasts" aria-live="polite"></div>
