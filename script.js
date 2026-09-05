@@ -341,6 +341,7 @@ const closeModelButton = document.querySelector("#modelClose");
 
 if (modelStage && modelPreview && modelStatus && modelPill && openModelButton) {
   let activeViewer;
+  openModelButton.addEventListener("click", openModel);
 
   function openModel() {
   if (activeViewer) return;
@@ -530,10 +531,6 @@ if (modelStage && modelPreview && modelStatus && modelPill && openModelButton) {
     resetModelButton.disabled = true;
     closeModelButton.hidden = true;
   }
-
-  openModelButton.addEventListener("click", () => {
-    openModel();
-  });
   closeModelButton?.addEventListener("click", closeModel);
 
   function renderModel() {
@@ -553,4 +550,5 @@ if (modelStage && modelPreview && modelStatus && modelPill && openModelButton) {
     console.error("Unable to start 3D viewer", error);
   }
 }
+
 }
