@@ -6,7 +6,6 @@ const supabasePublishableKey =
   import.meta.env.VITE_SUPABASE_ANON_KEY ||
   "";
 let supabaseClient;
-
 /* ==========================================================================
    CLIENT-SIDE BEHAVIOUR — NO FABRICATED TELEMETRY
    ==========================================================================
