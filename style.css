@@ -80,16 +80,16 @@ button,input,select,textarea{font:inherit;color:inherit}
 
 .model-viewer{margin-bottom:16px}
 .model-stage{
-  position:relative;min-height:480px;overflow:hidden;border:1px solid var(--line);
+  position:relative;min-height:680px;overflow:hidden;border:1px solid var(--line);
   border-radius:var(--r-sm);background:linear-gradient(145deg,#dceff5,#b9dce9);
 }
 .model-stage[hidden]{display:none}
 .model-preview{
-  min-height:300px;display:grid;place-items:center;overflow:hidden;border:1px solid var(--line);
+  min-height:420px;display:grid;place-items:center;overflow:hidden;border:1px solid var(--line);
   border-radius:var(--r-sm);background:linear-gradient(145deg,#dceff5,#b9dce9);
 }
 .model-preview svg{width:min(100%,620px);height:auto}
-.model-stage canvas{display:block;width:100%;height:480px}
+.model-stage canvas{display:block;width:100%;height:680px}
 .model-status{
   position:absolute;inset:0;display:grid;place-items:center;padding:24px;text-align:center;
   color:var(--text-dim);font-family:var(--mono);font-size:.76rem;pointer-events:none;
@@ -103,7 +103,7 @@ button,input,select,textarea{font:inherit;color:inherit}
 .model-controls{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:12px}
 .model-controls .sub{margin-left:auto}
 @media (max-width:700px){
-  .model-stage,.model-stage canvas{min-height:340px;height:340px}
+  .model-stage,.model-stage canvas{min-height:420px;height:420px}
   .model-controls .sub{width:100%;margin-left:0}
 }
 
