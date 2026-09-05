@@ -262,7 +262,8 @@ td.mono,th.mono{font-family:var(--mono)}
    LOGIN SCREEN
    ========================================================================== */
 #app-shell{display:none}
-body.logged-in #app-shell{display:block}
+body.logged-in #app-shell{display:flex;flex-direction:column;min-height:100vh}
+body.logged-in #app-shell main{flex:1;width:100%}
 body.logged-in #login-screen{display:none}
 #login-screen{
   min-height:100vh;display:grid;place-items:center;padding:24px;
@@ -416,7 +417,7 @@ body.logged-in #login-screen{display:none}
 }
 .tilt i{position:absolute;bottom:0;left:0;height:2px;background:var(--beacon)}
 
-footer{border-top:1px solid var(--line);padding:22px 0;margin-top:28px;color:var(--text-dim);font-size:.72rem;font-family:var(--mono);background:rgba(255,255,255,.55)}
+footer{border-top:1px solid var(--line);padding:22px 0;margin-top:auto;color:var(--text-dim);font-size:.72rem;font-family:var(--mono);background:rgba(255,255,255,.55)}
 footer .wrap{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
 .action-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
 
