@@ -294,14 +294,20 @@ if (modelStage && modelPreview && modelStatus && modelPill && openModelButton) {
   modelPreview.hidden = true;
   modelStage.hidden = false;
   openModelButton.hidden = true;
-  closeModelButton.hidden = false;
-  resetModelButton.disabled = false;
+  if (closeModelButton) closeModelButton.hidden = false;
+  resetModelButton.disabled = true;
+  modelStatus.hidden = false;
+  modelStatus.classList.remove("error");
+  modelStatus.textContent = "Starting 3D viewer…";
+
+  let renderer;
+  try {
   const scene = new THREE.Scene();
   scene.background = new THREE.Color("#dceff5");
   const camera = new THREE.PerspectiveCamera(42, 1, 0.1, 5000);
   camera.position.set(3, 2.4, 4.5);
 
-  const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+  renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   modelStage.appendChild(renderer.domElement);
@@ -400,6 +406,7 @@ if (modelStage && modelPreview && modelStatus && modelPill && openModelButton) {
       modelPill.textContent = "READY";
       modelPill.className = "pill ok";
       modelStatus.textContent = "3D model loaded.";
+      resetModelButton.disabled = false;
     },
     (event) => {
       if (event.total) {
@@ -475,5 +482,15 @@ if (modelStage && modelPreview && modelStatus && modelPill && openModelButton) {
     renderer.render(scene, camera);
   }
   renderModel();
+  } catch (error) {
+    activeViewer = null;
+    modelPreview.hidden = false;
+    modelStage.hidden = true;
+    openModelButton.hidden = false;
+    modelStatus.hidden = false;
+    modelStatus.textContent = "3D viewer could not start in this browser.";
+    modelStatus.classList.add("error");
+    console.error("Unable to start 3D viewer", error);
+  }
 }
 }
