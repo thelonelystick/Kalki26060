@@ -1,7 +1,11 @@
-window.__SUPABASE_CONFIG__ = {
-  url: "https://alymfzfgpqcvbcptwafg.supabase.co",
-  anonKey: "sb_publishable_-9n6AAFZlqfbLplrBfNo2w_bT7QnD9v"
-};
+import { createClient } from "@supabase/supabase-js";
+
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || "";
+const supabasePublishableKey =
+  import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ||
+  import.meta.env.VITE_SUPABASE_ANON_KEY ||
+  "";
+let supabaseClient;
 
 /* ==========================================================================
    CLIENT-SIDE BEHAVIOUR — NO FABRICATED TELEMETRY
@@ -56,32 +60,15 @@ async function restoreSession() {
 }
 
 function getSupabaseClient() {
-  const env = (typeof window !== "undefined" && window.__ENV__) || {};
-  const config = (typeof window !== "undefined" && window.__SUPABASE_CONFIG__) || {};
-
-  const url =
-    config.url ||
-    env.SUPABASE_URL ||
-    window.SUPABASE_URL ||
-    (typeof process !== "undefined" && process.env ? process.env.SUPABASE_URL : "") ||
-    "";
-
-  const anonKey =
-    config.anonKey ||
-    env.SUPABASE_PUBLISHABLE_KEY ||
-    env.SUPABASE_ANON_KEY ||
-    window.SUPABASE_PUBLISHABLE_KEY ||
-    window.SUPABASE_ANON_KEY ||
-    (typeof process !== "undefined" && process.env ? process.env.SUPABASE_PUBLISHABLE_KEY || process.env.SUPABASE_ANON_KEY : "") ||
-    "";
-
-  if (!url || !anonKey || !window.supabase) {
-    throw new Error("Supabase is not configured. Set SUPABASE_URL and SUPABASE_PUBLISHABLE_KEY before login.");
+  if (!supabaseUrl || !supabasePublishableKey) {
+    throw new Error("Supabase is not configured. Set VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_KEY before login.");
   }
-
-  return window.supabase.createClient(url, anonKey, {
-    auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
-  });
+  if (!supabaseClient) {
+    supabaseClient = createClient(supabaseUrl, supabasePublishableKey, {
+      auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
+    });
+  }
+  return supabaseClient;
 }
 
 async function validateSupabaseLogin(email, password) {
