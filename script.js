@@ -298,6 +298,7 @@ if (modelStage && modelPreview && modelStatus && modelPill && openModelButton) {
   resetModelButton.disabled = true;
   modelStatus.hidden = false;
   modelStatus.classList.remove("error");
+  modelStatus.classList.add("loading");
   modelStatus.textContent = "Starting 3D viewer…";
 
   let renderer;
@@ -405,6 +406,7 @@ if (modelStage && modelPreview && modelStatus && modelPill && openModelButton) {
       modelStatus.remove();
       modelPill.textContent = "READY";
       modelPill.className = "pill ok";
+      modelStatus.classList.remove("loading");
       modelStatus.textContent = "3D model loaded.";
       resetModelButton.disabled = false;
     },
@@ -418,6 +420,7 @@ if (modelStage && modelPreview && modelStatus && modelPill && openModelButton) {
       if (disposed) return;
       console.error("Unable to load landscape model", error);
       modelStatus.textContent = "Unable to load the landscape model. Check the asset path and network connection.";
+      modelStatus.classList.remove("loading");
       modelStatus.classList.add("error");
       modelPill.textContent = "UNAVAILABLE";
       modelPill.className = "pill bad";
@@ -426,6 +429,7 @@ if (modelStage && modelPreview && modelStatus && modelPill && openModelButton) {
     if (disposed) return;
     console.error("Unable to prepare cached landscape model", error);
     modelStatus.textContent = "Unable to load the landscape model. Check the asset path and network connection.";
+    modelStatus.classList.remove("loading");
     modelStatus.classList.add("error");
     modelPill.textContent = "UNAVAILABLE";
     modelPill.className = "pill bad";
@@ -463,6 +467,8 @@ if (modelStage && modelPreview && modelStatus && modelPill && openModelButton) {
     modelPreview.hidden = false;
     modelStage.hidden = true;
     modelStage.replaceChildren(modelStatus);
+    modelStatus.classList.add("loading");
+    modelStatus.classList.remove("error");
     modelStatus.textContent = "Loading landscape model…";
     modelPill.textContent = "PREVIEW";
     modelPill.className = "pill info";
