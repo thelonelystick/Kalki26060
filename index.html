@@ -1220,6 +1220,7 @@ markUnavailable(); renderMaint(); renderObsSelect(); renderObsLog(); renderThrea
 import * as THREE from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+import { DRACOLoader } from "three/addons/loaders/DRACOLoader.js";
 
 const modelStage = document.querySelector("#modelStage");
 const modelStatus = document.querySelector("#modelStatus");
@@ -1243,6 +1244,11 @@ if (modelStage && modelStatus && modelPill) {
   controls.dampingFactor = 0.06;
   controls.minDistance = 0.2;
   controls.maxDistance = 2000;
+
+  const dracoLoader = new DRACOLoader();
+  dracoLoader.setDecoderPath("https://cdn.jsdelivr.net/npm/three@0.176.0/examples/jsm/libs/draco/");
+  const gltfLoader = new GLTFLoader();
+  gltfLoader.setDRACOLoader(dracoLoader);
 
   scene.add(new THREE.HemisphereLight("#ffffff", "#7895a2", 2.2));
   const keyLight = new THREE.DirectionalLight("#ffffff", 2.6);
@@ -1297,7 +1303,7 @@ if (modelStage && modelStatus && modelPill) {
   new ResizeObserver(resizeModel).observe(modelStage);
   resizeModel();
 
-  new GLTFLoader().load(
+  gltfLoader.load(
     MODEL_URL,
     (gltf) => {
       model = gltf.scene;
