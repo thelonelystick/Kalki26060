@@ -1195,9 +1195,22 @@ $("#signShift")?.addEventListener("click",()=>{
    COMPLIANCE / DOCUMENT WORKFLOW — actual user actions only
    ========================================================================== */
 let docs=[];
+function appendTextRow(parent, pillText, title, detail, pillClass="") {
+  const row=document.createElement("div"); row.className="row";
+  const pill=document.createElement("span"); pill.className=`pill ${pillClass}`; pill.textContent=pillText;
+  const text=document.createElement("div"); text.className="txt";
+  const heading=document.createElement("b"); heading.textContent=title;
+  const description=document.createElement("span"); description.textContent=detail;
+  text.append(heading, description); row.append(pill, text); parent.append(row);
+}
 function renderDocs(){
   const el=$("#docList"); if(!el)return;
-  el.innerHTML=docs.length?docs.map(d=>`<div class="row"><span class="pill ok">ATTACHED</span><div class="txt"><b>${d.kind}</b><span>${d.name}</span></div></div>`).join(""): '<div class="row"><span class="pill">EMPTY</span><div class="txt"><b>No documents attached</b><span>Attach an actual EIA or Waste Management Plan to continue.</span></div></div>';
+  el.replaceChildren();
+  if (!docs.length) {
+    appendTextRow(el, "EMPTY", "No documents attached", "Attach an actual EIA or Waste Management Plan to continue.");
+    return;
+  }
+  docs.forEach(d=>appendTextRow(el, "ATTACHED", d.kind, d.name, "ok"));
 }
 function wireDrop(id,kind){
   const zone=$("#"+id); if(!zone)return;
@@ -1226,7 +1239,18 @@ $$("#moodRow button").forEach(b=>b.addEventListener("click",()=>{
 let threads=[];
 function renderThreads(){
   const el=$("#threads"); if(!el)return;
-  el.innerHTML=threads.length?threads.map(t=>`<div class="thread"><b>Anonymous</b><p>${t.body.replace(/[<>]/g,"")}</p><div class="meta">local draft · not transmitted</div></div>`).join(""):'<div class="row"><span class="pill">EMPTY</span><div class="txt"><b>No peer posts loaded</b><span>Connect an authenticated, secure forum service to display posts.</span></div></div>';
+  el.replaceChildren();
+  if (!threads.length) {
+    appendTextRow(el, "EMPTY", "No peer posts loaded", "Connect an authenticated, secure forum service to display posts.");
+    return;
+  }
+  threads.forEach(t => {
+    const thread=document.createElement("div"); thread.className="thread";
+    const author=document.createElement("b"); author.textContent="Anonymous";
+    const body=document.createElement("p"); body.textContent=t.body;
+    const meta=document.createElement("div"); meta.className="meta"; meta.textContent="local draft · not transmitted";
+    thread.append(author, body, meta); el.append(thread);
+  });
 }
 $("#postBtn")?.addEventListener("click",()=>{
   const v=$("#postBody").value.trim(); if(!v){toast("Empty post","Write something first.","warn");return;}
@@ -1240,7 +1264,20 @@ function renderObsSelect(){
 }
 function renderObsLog(){
   const el=$("#obsLog"); if(!el)return;
-  el.innerHTML=obs.length?obs.map(o=>`<div class="row"><span class="pill">${o.sev.toUpperCase()}</span><div class="txt"><b>${o.asset} — ${o.type}</b><span>${o.notes||"No notes."}</span><span class="mono">${o.at}</span></div></div>`).join(""):'<div class="row"><span class="pill">EMPTY</span><div class="txt"><b>No observations filed</b></div></div>';
+  el.replaceChildren();
+  if (!obs.length) {
+    appendTextRow(el, "EMPTY", "No observations filed", "Create an observation when an asset requires attention.");
+    return;
+  }
+  obs.forEach(o => {
+    const row=document.createElement("div"); row.className="row";
+    const pill=document.createElement("span"); pill.className="pill"; pill.textContent=o.sev.toUpperCase();
+    const text=document.createElement("div"); text.className="txt";
+    const heading=document.createElement("b"); heading.textContent=`${o.asset} — ${o.type}`;
+    const notes=document.createElement("span"); notes.textContent=o.notes || "No notes.";
+    const timestamp=document.createElement("span"); timestamp.className="mono"; timestamp.textContent=o.at;
+    text.append(heading, notes, timestamp); row.append(pill, text); el.append(row);
+  });
 }
 $("#obsSubmit")?.addEventListener("click",()=>{
   if(!$("#obsAsset").value){toast("Select an asset","Choose the asset being observed.","warn");return;}
