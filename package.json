@@ -1,5 +1,14 @@
 {
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
   "dependencies": {
-    "@supabase/server": "^1.4.1"
+    "@supabase/supabase-js": "^2.57.4",
+    "three": "^0.176.0"
+  },
+  "devDependencies": {
+    "vite": "^7.1.5"
   }
 }

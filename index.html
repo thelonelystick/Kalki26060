@@ -487,7 +487,7 @@ footer{border-top:1px solid var(--line);padding:22px 0;color:var(--text-faint);f
     <form id="loginForm" class="login-form">
       <div class="field">
         <label for="loginEmail">Email or username</label>
-        <input id="loginEmail" name="email" type="text" placeholder="Enter email or username" autocomplete="username" required />
+        <input id="loginEmail" name="email" type="email" placeholder="Enter email" autocomplete="username" required />
       </div>
       <div class="field">
         <label for="loginPassword">Password</label>
@@ -520,6 +520,7 @@ footer{border-top:1px solid var(--line);padding:22px 0;color:var(--text-faint);f
     </nav>
 
     <div class="clock"><b id="clkUtc">--:--:--</b> UTC<br /><span id="clkLocal">station --:--</span></div>
+    <button class="btn ghost sm" id="logoutButton" type="button">Log out</button>
   </div>
 </header>
 
@@ -995,8 +996,6 @@ window.__SUPABASE_CONFIG__ = {
   url: "https://alymfzfgpqcvbcptwafg.supabase.co",
   anonKey: "sb_publishable_-9n6AAFZlqfbLplrBfNo2w_bT7QnD9v"
 };
-window.SUPABASE_URL = "https://alymfzfgpqcvbcptwafg.supabase.co";
-window.SUPABASE_PUBLISHABLE_KEY = "sb_publishable_-9n6AAFZlqfbLplrBfNo2w_bT7QnD9v";
 
 /* ==========================================================================
    CLIENT-SIDE BEHAVIOUR — NO FABRICATED TELEMETRY
@@ -1008,7 +1007,6 @@ window.SUPABASE_PUBLISHABLE_KEY = "sb_publishable_-9n6AAFZlqfbLplrBfNo2w_bT7QnD9
 const $ = (s, r=document) => r.querySelector(s);
 const $$ = (s, r=document) => [...r.querySelectorAll(s)];
 const pad = n => String(n).padStart(2, "0");
-const LOGIN_TABLE = "login";
 const MODEL_URL = new URL(
   ((typeof window !== "undefined" && window.__ENV__?.MODEL_URL) || "assets/landscape.glb"),
   document.baseURI
@@ -1019,7 +1017,10 @@ const loginStatus = $("#loginStatus");
 
 function toast(title, msg, kind="") {
   const el=document.createElement("div"); el.className="toast "+kind;
-  el.innerHTML=`<b>${title}</b>${msg}`; $("#toasts").appendChild(el);
+  const heading = document.createElement("b");
+  heading.textContent = title;
+  el.append(heading, document.createTextNode(msg));
+  $("#toasts").appendChild(el);
   setTimeout(()=>el.remove(),4200);
 }
 
@@ -1029,26 +1030,22 @@ function setLoginMessage(msg, kind="") {
   loginStatus.className = "login-status" + (kind ? ` ${kind}` : "");
 }
 
-function setUserSession(user) {
-  localStorage.setItem("polaris_login_user", JSON.stringify(user));
+function setUserSession() {
   document.body.classList.add("logged-in");
   window.dispatchEvent(new Event("polaris:login-state"));
 }
 
-function restoreSession() {
-  const stored = localStorage.getItem("polaris_login_user");
-  if (stored) {
-    try {
-      const user = JSON.parse(stored);
-      if (user && user.email) {
-        document.body.classList.add("logged-in");
-        return;
-      }
-    } catch (error) {
-      console.warn("Unable to restore login session", error);
+async function restoreSession() {
+  try {
+    const { data, error } = await getSupabaseClient().auth.getSession();
+    if (error) throw error;
+    if (data.session) {
+      setUserSession();
+      return;
     }
+  } catch (error) {
+    console.error("Unable to restore authentication session", error);
   }
-  localStorage.removeItem("polaris_login_user");
   document.body.classList.remove("logged-in");
 }
 
@@ -1077,55 +1074,23 @@ function getSupabaseClient() {
   }
 
   return window.supabase.createClient(url, anonKey, {
-    auth: { persistSession: false, autoRefreshToken: false }
+    auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
   });
 }
 
 async function validateSupabaseLogin(email, password) {
-  const input = String(email || "").trim();
+  const input = String(email || "").trim().toLowerCase();
 
   if (!input || !password) {
-    throw new Error("Email/username and password are required.");
+    throw new Error("Email and password are required.");
   }
 
-  let client;
-  try {
-    client = getSupabaseClient();
-  } catch (error) {
-    throw new Error(error.message || "Supabase is not configured.");
-  }
-
-  const [emailResult, usernameResult] = await Promise.all([
-    client.from(LOGIN_TABLE).select("id,email,username,password,name").eq("email", input).limit(20),
-    client.from(LOGIN_TABLE).select("id,email,username,password,name").eq("username", input).limit(20)
-  ]);
-
-  const emailError = emailResult.error;
-  const usernameError = usernameResult.error;
-  if (emailError && usernameError) {
-    throw new Error(emailError.message || usernameError.message || "Unable to access the login table.");
-  }
-
-  const rows = [...(emailResult.data || []), ...(usernameResult.data || [])];
-  const uniqueRows = rows.filter((row, index, arr) => arr.findIndex(candidate => candidate.id === row.id) === index);
-
-  const match = uniqueRows.find((row) => {
-    const rowEmail = String(row.email || "").trim().toLowerCase();
-    const rowUsername = String(row.username || "").trim().toLowerCase();
-    const rowPassword = String(row.password || "");
-    const value = input.trim().toLowerCase();
-    return rowPassword === password && (rowEmail === value || rowUsername === value);
+  const { data, error } = await getSupabaseClient().auth.signInWithPassword({
+    email: input,
+    password
   });
-
-  if (!match) {
-    throw new Error("Invalid email/username or password.");
-  }
-
-  return {
-    email: String(match.email || match.username || input),
-    username: String(match.username || match.email || input),
-    name: match.name || match.username || match.email || "Station User"
-  };
+  if (error) throw new Error("Invalid email or password.");
+  return data.user;
 }
 
 loginForm?.addEventListener("submit", async (event) => {
@@ -1134,7 +1099,7 @@ loginForm?.addEventListener("submit", async (event) => {
   const password = $("#loginPassword").value;
 
   if (!email || !password) {
-    setLoginMessage("Please enter both your email/username and password.", "error");
+    setLoginMessage("Please enter both your email and password.", "error");
     return;
   }
 
@@ -1142,8 +1107,8 @@ loginForm?.addEventListener("submit", async (event) => {
 
   try {
     const user = await validateSupabaseLogin(email, password);
-    setLoginMessage(`Welcome, ${user.name}.`, "success");
-    setUserSession(user);
+    setLoginMessage(`Welcome, ${user.user_metadata?.name || user.email}.`, "success");
+    setUserSession();
     toast("Login successful", "Redirecting to the operations console.");
     setTimeout(() => {
       document.body.classList.add("logged-in");
@@ -1155,6 +1120,22 @@ loginForm?.addEventListener("submit", async (event) => {
     setLoginMessage(msg, "error");
     toast("Login failed", msg, "bad");
   }
+});
+
+$("#logoutButton")?.addEventListener("click", async () => {
+  const { error } = await getSupabaseClient().auth.signOut();
+  if (error) {
+    console.error("Unable to sign out", error);
+    toast("Sign out failed", "Please try again.", "bad");
+    return;
+  }
+  document.body.classList.remove("logged-in");
+  toast("Signed out", "Your session has ended.");
+});
+
+getSupabaseClient().auth.onAuthStateChange((_event, session) => {
+  if (session) setUserSession();
+  else document.body.classList.remove("logged-in");
 });
 
 /* Module navigation */
