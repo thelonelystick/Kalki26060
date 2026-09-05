@@ -1,8 +1,3 @@
-window.__SUPABASE_CONFIG__ = {
-  url: "https://alymfzfgpqcvbcptwafg.supabase.co",
-  anonKey: "sb_publishable_-9n6AAFZlqfbLplrBfNo2w_bT7QnD9v"
-};
-
 /* ==========================================================================
    CLIENT-SIDE BEHAVIOUR — NO FABRICATED TELEMETRY
    ==========================================================================
@@ -56,27 +51,11 @@ async function restoreSession() {
 }
 
 function getSupabaseClient() {
-  const env = (typeof window !== "undefined" && window.__ENV__) || {};
-  const config = (typeof window !== "undefined" && window.__SUPABASE_CONFIG__) || {};
-
-  const url =
-    config.url ||
-    env.SUPABASE_URL ||
-    window.SUPABASE_URL ||
-    (typeof process !== "undefined" && process.env ? process.env.SUPABASE_URL : "") ||
-    "";
-
-  const anonKey =
-    config.anonKey ||
-    env.SUPABASE_PUBLISHABLE_KEY ||
-    env.SUPABASE_ANON_KEY ||
-    window.SUPABASE_PUBLISHABLE_KEY ||
-    window.SUPABASE_ANON_KEY ||
-    (typeof process !== "undefined" && process.env ? process.env.SUPABASE_PUBLISHABLE_KEY || process.env.SUPABASE_ANON_KEY : "") ||
-    "";
+  const url = import.meta.env.VITE_SUPABASE_URL || "https://alymfzfgpqcvbcptwafg.supabase.co";
+  const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || "sb_publishable_-9n6AAFZlqfbLplrBfNo2w_bT7QnD9v";
 
   if (!url || !anonKey || !window.supabase) {
-    throw new Error("Supabase is not configured. Set SUPABASE_URL and SUPABASE_PUBLISHABLE_KEY before login.");
+    throw new Error("Supabase is not configured. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY before login.");
   }
 
   return window.supabase.createClient(url, anonKey, {
