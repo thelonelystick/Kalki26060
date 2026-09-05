@@ -954,6 +954,10 @@ const $ = (s, r=document) => r.querySelector(s);
 const $$ = (s, r=document) => [...r.querySelectorAll(s)];
 const pad = n => String(n).padStart(2, "0");
 const LOGIN_TABLE = "login";
+const MODEL_URL = new URL(
+  ((typeof window !== "undefined" && window.__ENV__?.MODEL_URL) || "assets/landscape.glb"),
+  document.baseURI
+).href;
 
 const loginForm = $("#loginForm");
 const loginStatus = $("#loginStatus");
@@ -1294,7 +1298,7 @@ if (modelStage && modelStatus && modelPill) {
   resizeModel();
 
   new GLTFLoader().load(
-    "./assets/landscape.glb",
+    MODEL_URL,
     (gltf) => {
       model = gltf.scene;
       scene.add(model);
