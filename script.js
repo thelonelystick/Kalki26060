@@ -47,11 +47,16 @@ function setLoginMessage(msg, kind="") {
 }
 
 function setUserSession() {
+  localStorage.setItem("polaris-login-state", "authenticated");
   document.body.classList.add("logged-in");
   window.dispatchEvent(new Event("polaris:login-state"));
 }
 
 async function restoreSession() {
+  if (localStorage.getItem("polaris-login-state") === "authenticated") {
+    setUserSession();
+    return;
+  }
   document.body.classList.remove("logged-in");
 }
 
@@ -110,14 +115,10 @@ loginForm?.addEventListener("submit", async (event) => {
   }
 });
 
-$("#logoutButton")?.addEventListener("click", async () => {
+$("#logoutButton")?.addEventListener("click", () => {
+  localStorage.removeItem("polaris-login-state");
   document.body.classList.remove("logged-in");
   toast("Signed out", "Your session has ended.");
-});
-
-getSupabaseClient().auth.onAuthStateChange((_event, session) => {
-  if (session) setUserSession();
-  else document.body.classList.remove("logged-in");
 });
 
 /* Module navigation */
@@ -282,14 +283,19 @@ const modelStatus = document.querySelector("#modelStatus");
 const modelPill = document.querySelector("#modelPill");
 const openModelButton = document.querySelector("#modelOpen");
 const resetModelButton = document.querySelector("#modelReset");
+const closeModelButton = document.querySelector("#modelClose");
 
 if (modelStage && modelPreview && modelStatus && modelPill && openModelButton) {
-  openModelButton.addEventListener("click", () => {
+  let activeViewer;
+
+  function openModel() {
+  if (activeViewer) return;
+  activeViewer = true;
   modelPreview.hidden = true;
   modelStage.hidden = false;
-  openModelButton.disabled = true;
+  openModelButton.hidden = true;
+  closeModelButton.hidden = false;
   resetModelButton.disabled = false;
-  openModelButton.textContent = "Loading 3D model…";
   const scene = new THREE.Scene();
   scene.background = new THREE.Color("#dceff5");
   const camera = new THREE.PerspectiveCamera(42, 1, 0.1, 5000);
@@ -321,6 +327,9 @@ if (modelStage && modelPreview && modelStatus && modelPill && openModelButton) {
 
   let model;
   let initialCamera;
+  let animationFrame;
+  let modelObjectUrl;
+  let disposed = false;
   function resizeModel() {
     const width = modelStage.clientWidth;
     const height = modelStage.clientHeight;
@@ -353,9 +362,11 @@ if (modelStage && modelPreview && modelStatus && modelPill && openModelButton) {
   }
 
   resetModelButton?.addEventListener("click", resetModelView);
-  window.addEventListener("resize", resizeModel);
-  window.addEventListener("polaris:login-state", resizeModel);
-  new ResizeObserver(resizeModel).observe(modelStage);
+  const resizeObserver = new ResizeObserver(resizeModel);
+  const handleResize = () => resizeModel();
+  window.addEventListener("resize", handleResize);
+  window.addEventListener("polaris:login-state", handleResize);
+  resizeObserver.observe(modelStage);
   resizeModel();
 
   async function getCachedModelUrl() {
@@ -365,19 +376,22 @@ if (modelStage && modelPreview && modelStatus && modelPill && openModelButton) {
     const cached = await cache.match(MODEL_URL);
     if (cached) {
       modelStatus.textContent = "Loading cached landscape model…";
-      return URL.createObjectURL(await cached.blob());
+      modelObjectUrl = URL.createObjectURL(await cached.blob());
+      return modelObjectUrl;
     }
 
     modelStatus.textContent = "Downloading landscape model for first use…";
     const response = await fetch(MODEL_URL);
     if (!response.ok) throw new Error(`Model request failed (${response.status})`);
     await cache.put(MODEL_URL, response.clone());
-    return URL.createObjectURL(await response.blob());
+    modelObjectUrl = URL.createObjectURL(await response.blob());
+    return modelObjectUrl;
   }
 
   getCachedModelUrl().then((modelUrl) => gltfLoader.load(
     modelUrl,
     (gltf) => {
+      if (disposed) return;
       model = gltf.scene;
       scene.add(model);
       frameModel(model);
@@ -385,7 +399,7 @@ if (modelStage && modelPreview && modelStatus && modelPill && openModelButton) {
       modelStatus.remove();
       modelPill.textContent = "READY";
       modelPill.className = "pill ok";
-      openModelButton.textContent = "3D model open";
+      modelStatus.textContent = "3D model loaded.";
     },
     (event) => {
       if (event.total) {
@@ -394,6 +408,7 @@ if (modelStage && modelPreview && modelStatus && modelPill && openModelButton) {
       }
     },
     (error) => {
+      if (disposed) return;
       console.error("Unable to load landscape model", error);
       modelStatus.textContent = "Unable to load the landscape model. Check the asset path and network connection.";
       modelStatus.classList.add("error");
@@ -401,20 +416,64 @@ if (modelStage && modelPreview && modelStatus && modelPill && openModelButton) {
       modelPill.className = "pill bad";
     }
   )).catch((error) => {
+    if (disposed) return;
     console.error("Unable to prepare cached landscape model", error);
     modelStatus.textContent = "Unable to load the landscape model. Check the asset path and network connection.";
     modelStatus.classList.add("error");
     modelPill.textContent = "UNAVAILABLE";
     modelPill.className = "pill bad";
     openModelButton.disabled = false;
-    openModelButton.textContent = "Retry 3D model";
   });
 
+  function disposeMaterial(material) {
+    Object.values(material).forEach((value) => {
+      if (value && typeof value === "object" && "isTexture" in value) value.dispose();
+    });
+    material.dispose();
+  }
+
+  function closeModel() {
+    if (!activeViewer) return;
+    disposed = true;
+    cancelAnimationFrame(animationFrame);
+    resizeObserver.disconnect();
+    window.removeEventListener("resize", handleResize);
+    window.removeEventListener("polaris:login-state", handleResize);
+    resetModelButton?.removeEventListener("click", resetModelView);
+    controls.dispose();
+    scene.traverse((object) => {
+      if (!object.isMesh) return;
+      object.geometry.dispose();
+      const materials = Array.isArray(object.material) ? object.material : [object.material];
+      materials.forEach(disposeMaterial);
+    });
+    renderer.dispose();
+    renderer.domElement.remove();
+    dracoLoader.dispose();
+    if (modelObjectUrl) URL.revokeObjectURL(modelObjectUrl);
+    model = null;
+    activeViewer = null;
+    modelPreview.hidden = false;
+    modelStage.hidden = true;
+    modelStage.replaceChildren(modelStatus);
+    modelStatus.textContent = "Loading landscape model…";
+    modelPill.textContent = "PREVIEW";
+    modelPill.className = "pill info";
+    openModelButton.hidden = false;
+    resetModelButton.disabled = true;
+    closeModelButton.hidden = true;
+  }
+
+  openModelButton.addEventListener("click", () => {
+    openModel();
+  });
+  closeModelButton?.addEventListener("click", closeModel);
+
   function renderModel() {
-    requestAnimationFrame(renderModel);
+    animationFrame = requestAnimationFrame(renderModel);
     controls.update();
     renderer.render(scene, camera);
   }
   renderModel();
-  });
+}
 }
