@@ -52,16 +52,6 @@ function setUserSession() {
 }
 
 async function restoreSession() {
-  try {
-    const { data, error } = await getSupabaseClient().auth.getSession();
-    if (error) throw error;
-    if (data.session) {
-      setUserSession();
-      return;
-    }
-  } catch (error) {
-    console.error("Unable to restore authentication session", error);
-  }
   document.body.classList.remove("logged-in");
 }
 
@@ -77,35 +67,18 @@ function getSupabaseClient() {
   return supabaseClient;
 }
 
-async function resolveLoginEmail(identifier) {
+async function validateLoginCredentials(identifier, password) {
   const input = String(identifier || "").trim();
-  if (input.includes("@")) return input.toLowerCase();
-
-  const { data, error } = await getSupabaseClient()
-    .from("login")
-    .select("email")
-    .ilike("username", input)
-    .limit(1);
-
-  if (error || !data?.[0]?.email) {
-    throw new Error("Invalid email, username, or password.");
-  }
-  return data[0].email.trim().toLowerCase();
-}
-
-async function validateSupabaseLogin(identifier, password) {
-  const email = await resolveLoginEmail(identifier);
-
-  if (!email || !password) {
+  if (!input || !password) {
     throw new Error("Email or username and password are required.");
   }
 
-  const { data, error } = await getSupabaseClient().auth.signInWithPassword({
-    email,
-    password
+  const { data, error } = await getSupabaseClient().rpc("verify_login", {
+    login_identifier: input,
+    login_password: password
   });
-  if (error) throw new Error("Invalid email or password.");
-  return data.user;
+  if (error || !data?.[0]) throw new Error("Invalid email, username, or password.");
+  return data[0];
 }
 
 loginForm?.addEventListener("submit", async (event) => {
@@ -121,8 +94,8 @@ loginForm?.addEventListener("submit", async (event) => {
   setLoginMessage("Checking credentials…");
 
   try {
-    const user = await validateSupabaseLogin(email, password);
-    setLoginMessage(`Welcome, ${user.user_metadata?.name || user.email}.`, "success");
+    const user = await validateLoginCredentials(email, password);
+    setLoginMessage(`Welcome, ${user.name || user.username || user.email}.`, "success");
     setUserSession();
     toast("Login successful", "Redirecting to the operations console.");
     setTimeout(() => {
@@ -138,12 +111,6 @@ loginForm?.addEventListener("submit", async (event) => {
 });
 
 $("#logoutButton")?.addEventListener("click", async () => {
-  const { error } = await getSupabaseClient().auth.signOut();
-  if (error) {
-    console.error("Unable to sign out", error);
-    toast("Sign out failed", "Please try again.", "bad");
-    return;
-  }
   document.body.classList.remove("logged-in");
   toast("Signed out", "Your session has ended.");
 });
