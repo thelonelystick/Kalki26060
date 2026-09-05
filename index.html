@@ -1,15 +1,15 @@
 <!DOCTYPE html>
 <!--
   ============================================================================
-  POLARIS OPS — Antarctic Polar Operations Console
+  POLARIS OPS — Antarctic Station Operations Console
   Single-file frontend: HTML + CSS + JavaScript (no build step, no dependencies)
   ----------------------------------------------------------------------------
   MODULES
-    1. Satellite Ground Station & DRS Mission Control
-    2. Meteorological & Atmospheric Resilience Dashboard
-    3. Regulatory, Permitting & Environmental Compliance Portal
-    4. Winter-Over Psychological Well-being Hub
-    5. Infrastructure & Heritage Preservation Tracker
+    1. View Twin Model
+    2. Access Infrastructure
+    3. Utilities
+    4. Data Transfer Protocol
+    5. Alerts
   ----------------------------------------------------------------------------
   No operational telemetry or fabricated observations are embedded. Connect the
   data adapters below to authoritative station feeds before displaying live values.
@@ -23,9 +23,9 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Polaris Ops — Antarctic Station Operations Console</title>
-<meta name="description" content="Operations console for Antarctic stations: DRS satellite passes, blizzard and rain-on-snow advisories, permitting compliance, winter-over well-being, and heritage integrity logs." />
+<meta name="description" content="Lightweight operations console for Antarctic stations: twin model monitoring, infrastructure access, utilities, data transfer, and alerts." />
 <meta property="og:title" content="Polaris Ops — Antarctic Station Operations Console" />
-<meta property="og:description" content="Five-module console for polar ground stations: orbit scheduling, micro-climate forecasting, compliance, well-being, and infrastructure integrity." />
+<meta property="og:description" content="Five-module console for Antarctic stations: twin model monitoring, infrastructure access, utilities, data transfer, and alerts." />
 <meta property="og:type" content="website" />
 <meta name="twitter:card" content="summary_large_image" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -34,7 +34,7 @@
 
 <style>
 /* ==========================================================================
-   1. DESIGN TOKENS — glacial night palette, instrument-panel typography
+  1. DESIGN TOKENS — light sky palette, instrument-panel typography
    ========================================================================== */
 :root{
   --ice-900:#050b14;
@@ -63,6 +63,30 @@
   --shadow:0 22px 50px -28px rgba(0,0,0,.95);
 }
 
+/* Light sky-blue station theme */
+:root{
+  --ice-900:#eaf7fc;
+  --ice-850:#f5fbfe;
+  --ice-800:#e1f2f9;
+  --ice-750:#d4ebf4;
+  --ice-700:#b9dce9;
+  --line:rgba(43,111,142,.18);
+  --line-strong:rgba(43,111,142,.36);
+  --text:#173b4c;
+  --text-dim:#527282;
+  --text-faint:#7895a2;
+  --aurora:#168a9b;
+  --aurora-dim:rgba(22,138,155,.12);
+  --beacon:#bd7312;
+  --beacon-dim:rgba(189,115,18,.12);
+  --alarm:#c44848;
+  --alarm-dim:rgba(196,72,72,.12);
+  --signal:#247cc0;
+  --signal-dim:rgba(36,124,192,.12);
+  --violet:#7560bd;
+  --shadow:0 18px 40px -28px rgba(47,104,126,.42);
+}
+
 /* ==========================================================================
    2. BASE / RESET
    ========================================================================== */
@@ -79,6 +103,10 @@ body{
   min-height:100vh;
   line-height:1.5;
 }
+body{background:
+  radial-gradient(1100px 620px at 12% -8%, rgba(73,181,211,.18), transparent 62%),
+  radial-gradient(900px 540px at 92% 4%, rgba(111,183,255,.17), transparent 60%),
+  var(--ice-900);}
 a{color:inherit;text-decoration:none}
 button,input,select,textarea{font:inherit;color:inherit}
 ::selection{background:rgba(79,224,192,.3)}
@@ -96,7 +124,7 @@ button,input,select,textarea{font:inherit;color:inherit}
 header.topbar{
   position:sticky;top:0;z-index:50;
   backdrop-filter:blur(16px);
-  background:rgba(5,11,20,.86);
+  background:rgba(245,251,254,.9);
   border-bottom:1px solid var(--line);
 }
 .topbar-inner{display:flex;align-items:center;gap:20px;height:64px}
@@ -122,7 +150,7 @@ nav.modnav::-webkit-scrollbar{display:none}
 
 .statusstrip{
   border-bottom:1px solid var(--line);
-  background:linear-gradient(90deg,rgba(11,24,38,.9),rgba(8,17,29,.6));
+  background:linear-gradient(90deg,rgba(225,242,249,.92),rgba(245,251,254,.78));
   overflow:hidden;
 }
 .statusstrip .wrap{display:flex;gap:26px;padding-top:9px;padding-bottom:9px;overflow-x:auto;scrollbar-width:none}
@@ -158,7 +186,7 @@ main{padding:30px 0 90px}
 @media(max-width:1000px){.g2,.g3,.g-2-1,.g-1-2{grid-template-columns:1fr}}
 
 .panel{
-  background:linear-gradient(180deg,rgba(16,34,50,.72),rgba(8,17,29,.85));
+  background:linear-gradient(180deg,rgba(255,255,255,.88),rgba(225,242,249,.9));
   border:1px solid var(--line);border-radius:var(--r);padding:18px;box-shadow:var(--shadow);
 }
 .panel h2{font-size:.95rem;font-weight:700;letter-spacing:-.01em;display:flex;align-items:center;gap:9px}
@@ -206,7 +234,7 @@ td.mono,th.mono{font-family:var(--mono)}
 .list{display:flex;flex-direction:column;gap:9px}
 .row{
   display:flex;gap:11px;align-items:flex-start;padding:11px;border-radius:var(--r-sm);
-  border:1px solid var(--line);background:rgba(5,11,20,.45);
+  border:1px solid var(--line);background:rgba(255,255,255,.58);
 }
 .row .txt{flex:1;min-width:0}
 .row .txt b{display:block;font-size:.82rem}
@@ -219,7 +247,7 @@ td.mono,th.mono{font-family:var(--mono)}
 .field{display:flex;flex-direction:column;gap:5px;margin-bottom:12px}
 .field label{font-size:.7rem;font-family:var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--text-faint)}
 .field input,.field select,.field textarea{
-  background:rgba(5,11,20,.7);border:1px solid var(--line);border-radius:var(--r-sm);
+  background:rgba(255,255,255,.82);border:1px solid var(--line);border-radius:var(--r-sm);
   padding:9px 11px;font-size:.82rem;outline:none;transition:.15s;width:100%;
 }
 .field input:focus,.field select:focus,.field textarea:focus{border-color:var(--aurora);box-shadow:0 0 0 3px var(--aurora-dim)}
@@ -235,10 +263,10 @@ body.logged-in #login-screen{display:none}
   min-height:100vh;display:grid;place-items:center;padding:24px;
   background:
     radial-gradient(circle at top, rgba(79,224,192,.18), transparent 35%),
-    linear-gradient(180deg, rgba(5,11,20,1), rgba(8,17,29,1));
+    linear-gradient(180deg, rgba(234,247,252,1), rgba(245,251,254,1));
 }
 .login-card{
-  width:min(100%,420px);background:linear-gradient(180deg,rgba(16,34,50,.85),rgba(8,17,29,.96));
+  width:min(100%,420px);background:linear-gradient(180deg,rgba(255,255,255,.96),rgba(225,242,249,.94));
   border:1px solid var(--line);border-radius:22px;padding:30px 26px;box-shadow:var(--shadow);
 }
 .login-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
@@ -270,7 +298,7 @@ body.logged-in #login-screen{display:none}
 @keyframes spin{to{transform:rotate(360deg)}}
 
 .passcard{
-  border:1px solid var(--line);border-radius:var(--r-sm);padding:11px;background:rgba(5,11,20,.5);
+  border:1px solid var(--line);border-radius:var(--r-sm);padding:11px;background:rgba(255,255,255,.58);
   display:flex;gap:11px;align-items:center;cursor:pointer;transition:.16s;
 }
 .passcard:hover{border-color:var(--line-strong);transform:translateX(3px)}
@@ -292,7 +320,7 @@ body.logged-in #login-screen{display:none}
 
 .lidar{
   position:relative;height:250px;border-radius:var(--r-sm);overflow:hidden;
-  border:1px solid var(--line);background:#04101a;display:flex;align-items:flex-end;gap:1px;padding:0;
+  border:1px solid var(--line);background:#d8edf5;display:flex;align-items:flex-end;gap:1px;padding:0;
 }
 .lidar .col{flex:1;height:100%;display:flex;flex-direction:column-reverse}
 .lidar .cell{flex:1}
@@ -317,7 +345,7 @@ body.logged-in #login-screen{display:none}
 .stepper{display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap}
 .step{
   flex:1;min-width:120px;padding:9px 11px;border-radius:var(--r-sm);border:1px solid var(--line);
-  background:rgba(5,11,20,.45);font-size:.72rem;color:var(--text-dim);
+  background:rgba(255,255,255,.58);font-size:.72rem;color:var(--text-dim);
 }
 .step b{display:block;font-family:var(--mono);font-size:.6rem;letter-spacing:.14em;color:var(--text-faint)}
 .step.active{border-color:var(--aurora);background:var(--aurora-dim);color:var(--text)}
@@ -349,7 +377,7 @@ body.logged-in #login-screen{display:none}
   background:var(--ice-900);border:2px solid var(--text-faint);transition:.2s;
 }
 .tnode.on::before{border-color:var(--aurora);box-shadow:0 0 0 4px var(--aurora-dim)}
-.tnode .card{border:1px solid var(--line);border-radius:var(--r-sm);padding:12px;background:rgba(5,11,20,.45);transition:.18s}
+.tnode .card{border:1px solid var(--line);border-radius:var(--r-sm);padding:12px;background:rgba(255,255,255,.58);transition:.18s}
 .tnode.on .card{border-color:var(--line-strong);background:rgba(16,34,50,.7)}
 
 .gauge{display:flex;flex-direction:column;gap:8px}
@@ -360,7 +388,7 @@ body.logged-in #login-screen{display:none}
 
 .mood{display:flex;gap:7px;flex-wrap:wrap}
 .mood button{
-  cursor:pointer;border:1px solid var(--line);background:rgba(5,11,20,.5);border-radius:999px;
+  cursor:pointer;border:1px solid var(--line);background:rgba(255,255,255,.58);border-radius:999px;
   padding:7px 13px;font-size:.76rem;transition:.16s;
 }
 .mood button:hover{border-color:var(--line-strong)}
@@ -374,7 +402,7 @@ body.logged-in #login-screen{display:none}
 /* ==========================================================================
    9. MODULE 5 — SITES & HERITAGE
    ========================================================================== */
-.sitecard{border:1px solid var(--line);border-radius:var(--r-sm);padding:13px;background:rgba(5,11,20,.45)}
+.sitecard{border:1px solid var(--line);border-radius:var(--r-sm);padding:13px;background:rgba(255,255,255,.58)}
 .sitecard header{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:9px}
 .tilt{
   height:44px;border-radius:var(--r-sm);background:
@@ -441,11 +469,11 @@ footer{border-top:1px solid var(--line);padding:22px 0;color:var(--text-faint);f
     </div>
 
     <nav class="modnav" id="modnav" role="tablist" aria-label="Operational modules">
-      <button class="tab" role="tab" data-mod="m1" aria-selected="true">01 · Ground Station</button>
-      <button class="tab" role="tab" data-mod="m2" aria-selected="false">02 · Meteorology</button>
-      <button class="tab" role="tab" data-mod="m3" aria-selected="false">03 · Compliance</button>
-      <button class="tab" role="tab" data-mod="m4" aria-selected="false">04 · Well-being</button>
-      <button class="tab" role="tab" data-mod="m5" aria-selected="false">05 · Infrastructure</button>
+      <button class="tab" role="tab" data-mod="m1" aria-selected="true">01 · Twin Model</button>
+      <button class="tab" role="tab" data-mod="m2" aria-selected="false">02 · Infrastructure</button>
+      <button class="tab" role="tab" data-mod="m3" aria-selected="false">03 · Utilities</button>
+      <button class="tab" role="tab" data-mod="m4" aria-selected="false">04 · Data Transfer</button>
+      <button class="tab" role="tab" data-mod="m5" aria-selected="false">05 · Alerts</button>
     </nav>
 
     <div class="clock"><b id="clkUtc">--:--:--</b> UTC<br /><span id="clkLocal">station --:--</span></div>
@@ -470,13 +498,13 @@ footer{border-top:1px solid var(--line);padding:22px 0;color:var(--text-faint);f
 <main class="wrap">
 
 <!-- ==========================================================================
-     MODULE 1 — SATELLITE GROUND STATION & DRS MISSION CONTROL
+    MODULE 1 — VIEW TWIN MODEL
      ========================================================================== -->
 <section class="module active" id="m1" role="tabpanel">
   <div class="modhead">
     <span class="num">MODULE 01</span>
-    <h1>Satellite Ground Station &amp; DRS Mission Control</h1>
-    <p>Polar siting yields 10–12 visible orbits per polar-orbiting satellite per day against 4 of 14 from an equatorial site such as Hyderabad. Schedule capture windows, watch geomagnetic disruption of HF links, and hold the overwintering maintenance cadence.</p>
+    <h1>View Twin Model</h1>
+    <p>Inspect the station twin in context, monitor live system state, and keep the operational picture visible from one taskbar.</p>
   </div>
 
   <div class="grid g3" style="margin-bottom:16px">
@@ -570,13 +598,13 @@ footer{border-top:1px solid var(--line);padding:22px 0;color:var(--text-faint);f
 </section>
 
 <!-- ==========================================================================
-     MODULE 2 — METEOROLOGICAL & ATMOSPHERIC RESILIENCE DASHBOARD
+    MODULE 2 — ACCESS INFRASTRUCTURE
      ========================================================================== -->
 <section class="module" id="m2" role="tabpanel">
   <div class="modhead">
     <span class="num">MODULE 02</span>
-    <h1>Meteorological &amp; Atmospheric Resilience Dashboard</h1>
-    <p>Sparse observation coverage and inversion-driven micro-climates make polar forecasting fragile. Track blizzard onset, above-zero rain events that destroy gravel runways, and ground-based LiDAR returns to 15 km.</p>
+    <h1>Access Infrastructure</h1>
+    <p>Review station infrastructure access, routes, environmental conditions, and the operational constraints that shape each visit.</p>
   </div>
 
   <div class="grid g-2-1" style="margin-bottom:16px">
@@ -654,13 +682,13 @@ footer{border-top:1px solid var(--line);padding:22px 0;color:var(--text-faint);f
 </section>
 
 <!-- ==========================================================================
-     MODULE 3 — REGULATORY, PERMITTING & ENVIRONMENTAL COMPLIANCE PORTAL
+    MODULE 3 — UTILITIES
      ========================================================================== -->
 <section class="module" id="m3" role="tabpanel">
   <div class="modhead">
     <span class="num">MODULE 03</span>
-    <h1>Regulatory, Permitting &amp; Environmental Compliance Portal</h1>
-    <p>Administrative gateway for the Indian Antarctic Act and Antarctic Treaty System obligations: permits, Environmental Impact Assessments, waste plans, and biosecurity controls.</p>
+    <h1>Utilities</h1>
+    <p>Track power usage and station analytics to understand demand, identify trends, and support efficient operations.</p>
   </div>
 
   <div class="grid g-2-1" style="margin-bottom:16px">
@@ -744,13 +772,13 @@ footer{border-top:1px solid var(--line);padding:22px 0;color:var(--text-faint);f
 </section>
 
 <!-- ==========================================================================
-     MODULE 4 — WINTER-OVER PSYCHOLOGICAL WELL-BEING HUB
+    MODULE 4 — DATA TRANSFER PROTOCOL
      ========================================================================== -->
 <section class="module" id="m4" role="tabpanel">
   <div class="modhead">
     <span class="num">MODULE 04</span>
-    <h1>Winter-Over Psychological Well-being Hub</h1>
-    <p>Confidential support mapped to the documented arc of a winter-over: onset stress in March, midwinter insomnia in June, minimum interpersonal rapport in September, and satisfaction decline through December–January.</p>
+    <h1>Data Transfer Protocol</h1>
+    <p>Coordinate secure data movement between station systems with clear transfer status, protocol visibility, and handoff tracking.</p>
   </div>
 
   <div class="grid g-1-2" style="margin-bottom:16px">
@@ -803,13 +831,13 @@ footer{border-top:1px solid var(--line);padding:22px 0;color:var(--text-faint);f
 </section>
 
 <!-- ==========================================================================
-     MODULE 5 — INFRASTRUCTURE & HERITAGE PRESERVATION TRACKER
+    MODULE 5 — ALERTS
      ========================================================================== -->
 <section class="module" id="m5" role="tabpanel">
   <div class="modhead">
     <span class="num">MODULE 05</span>
-    <h1>Infrastructure &amp; Heritage Preservation Tracker</h1>
-    <p>Warming is compromising both operational sites and historic installations: meltwater access delays of the kind recorded at long-running ecological sites such as Mars Oasis, plus thaw-driven foundation movement and rain-accelerated timber rot.</p>
+    <h1>Alerts</h1>
+    <p>Surface priority alerts in one place so the station team can quickly review, triage, and respond to issues that need attention.</p>
   </div>
 
   <div class="grid g2" style="margin-bottom:16px">
