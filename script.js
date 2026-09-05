@@ -1,3 +1,11 @@
+import { createClient } from "@supabase/supabase-js";
+
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || "";
+const supabasePublishableKey =
+  import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ||
+  import.meta.env.VITE_SUPABASE_ANON_KEY ||
+  "";
+let supabaseClient;
 /* ==========================================================================
    CLIENT-SIDE BEHAVIOUR — NO FABRICATED TELEMETRY
    ==========================================================================
@@ -51,16 +59,15 @@ async function restoreSession() {
 }
 
 function getSupabaseClient() {
-  const url = import.meta.env.VITE_SUPABASE_URL || "https://alymfzfgpqcvbcptwafg.supabase.co";
-  const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || "sb_publishable_-9n6AAFZlqfbLplrBfNo2w_bT7QnD9v";
-
-  if (!url || !anonKey || !window.supabase) {
-    throw new Error("Supabase is not configured. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY before login.");
+  if (!supabaseUrl || !supabasePublishableKey) {
+    throw new Error("Supabase is not configured. Set VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_KEY before login.");
   }
-
-  return window.supabase.createClient(url, anonKey, {
-    auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
-  });
+  if (!supabaseClient) {
+    supabaseClient = createClient(supabaseUrl, supabasePublishableKey, {
+      auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
+    });
+  }
+  return supabaseClient;
 }
 
 async function validateSupabaseLogin(email, password) {
