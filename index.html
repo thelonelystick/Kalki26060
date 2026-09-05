@@ -973,6 +973,7 @@ function setLoginMessage(msg, kind="") {
 function setUserSession(user) {
   localStorage.setItem("polaris_login_user", JSON.stringify(user));
   document.body.classList.add("logged-in");
+  window.dispatchEvent(new Event("polaris:login-state"));
 }
 
 function restoreSession() {
@@ -1288,6 +1289,7 @@ if (modelStage && modelStatus && modelPill) {
     toggleSpinButton.textContent = spinning ? "Stop rotation" : "Start rotation";
   });
   window.addEventListener("resize", resizeModel);
+  window.addEventListener("polaris:login-state", resizeModel);
   new ResizeObserver(resizeModel).observe(modelStage);
   resizeModel();
 
@@ -1297,6 +1299,7 @@ if (modelStage && modelStatus && modelPill) {
       model = gltf.scene;
       scene.add(model);
       frameModel(model);
+      resizeModel();
       modelStatus.remove();
       modelPill.textContent = "READY";
       modelPill.className = "pill ok";
