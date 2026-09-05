@@ -1331,8 +1331,25 @@ if (modelStage && modelStatus && modelPill) {
   new ResizeObserver(resizeModel).observe(modelStage);
   resizeModel();
 
-  gltfLoader.load(
-    MODEL_URL,
+  async function getCachedModelUrl() {
+    if (!("caches" in window)) return MODEL_URL;
+
+    const cache = await caches.open("polaris-model-v1");
+    const cached = await cache.match(MODEL_URL);
+    if (cached) {
+      modelStatus.textContent = "Loading cached landscape model…";
+      return URL.createObjectURL(await cached.blob());
+    }
+
+    modelStatus.textContent = "Downloading landscape model for first use…";
+    const response = await fetch(MODEL_URL);
+    if (!response.ok) throw new Error(`Model request failed (${response.status})`);
+    await cache.put(MODEL_URL, response.clone());
+    return URL.createObjectURL(await response.blob());
+  }
+
+  getCachedModelUrl().then((modelUrl) => gltfLoader.load(
+    modelUrl,
     (gltf) => {
       model = gltf.scene;
       scene.add(model);
@@ -1355,7 +1372,13 @@ if (modelStage && modelStatus && modelPill) {
       modelPill.textContent = "UNAVAILABLE";
       modelPill.className = "pill bad";
     }
-  );
+  )).catch((error) => {
+    console.error("Unable to prepare cached landscape model", error);
+    modelStatus.textContent = "Unable to load the landscape model. Check the asset path and network connection.";
+    modelStatus.classList.add("error");
+    modelPill.textContent = "UNAVAILABLE";
+    modelPill.className = "pill bad";
+  });
 
   function renderModel() {
     requestAnimationFrame(renderModel);
