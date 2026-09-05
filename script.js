@@ -70,15 +70,31 @@ function getSupabaseClient() {
   return supabaseClient;
 }
 
-async function validateSupabaseLogin(email, password) {
-  const input = String(email || "").trim().toLowerCase();
+async function resolveLoginEmail(identifier) {
+  const input = String(identifier || "").trim();
+  if (input.includes("@")) return input.toLowerCase();
 
-  if (!input || !password) {
-    throw new Error("Email and password are required.");
+  const { data, error } = await getSupabaseClient()
+    .from("login")
+    .select("email")
+    .ilike("username", input)
+    .limit(1);
+
+  if (error || !data?.[0]?.email) {
+    throw new Error("Invalid email, username, or password.");
+  }
+  return data[0].email.trim().toLowerCase();
+}
+
+async function validateSupabaseLogin(identifier, password) {
+  const email = await resolveLoginEmail(identifier);
+
+  if (!email || !password) {
+    throw new Error("Email or username and password are required.");
   }
 
   const { data, error } = await getSupabaseClient().auth.signInWithPassword({
-    email: input,
+    email,
     password
   });
   if (error) throw new Error("Invalid email or password.");
