@@ -1,10 +1,17 @@
 import { createClient } from "@supabase/supabase-js";
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || "";
+const publicSupabaseUrl = "https://alymfzfgpqcvbcptwafg.supabase.co";
+const publicSupabasePublishableKey =
+  "sb_publishable_-9n6AAFZlqfbLplrBfNo2w_bT7QnD9v";
+const supabaseUrl =
+  import.meta.env.VITE_SUPABASE_URL ||
+  (typeof window !== "undefined" && window.__ENV__?.SUPABASE_URL) ||
+  publicSupabaseUrl;
 const supabasePublishableKey =
   import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ||
   import.meta.env.VITE_SUPABASE_ANON_KEY ||
-  "";
+  (typeof window !== "undefined" && window.__ENV__?.SUPABASE_PUBLISHABLE_KEY) ||
+  publicSupabasePublishableKey;
 let supabaseClient;
 /* ==========================================================================
    CLIENT-SIDE BEHAVIOUR — NO FABRICATED TELEMETRY
