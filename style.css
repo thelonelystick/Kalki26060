@@ -285,8 +285,8 @@ body.logged-in #login-screen{display:none}
 .login-form button{width:100%;margin-top:8px}
 .login-meta{margin-top:14px;font-size:.72rem;color:var(--text-faint);font-family:var(--mono);line-height:1.6}
 .login-status{min-height:22px;margin-top:10px;font-size:.78rem;color:var(--text-dim)}
-.login-status.error{color:var(--alarm)}
-.login-status.success{color:var(--aurora)}
+.login-status.error{color:#b42318;background:#fff0ee;border:1px solid #f2a7a0;border-radius:8px;padding:9px 10px;font-weight:700}
+.login-status.success{color:#075e45;background:#e5fff5;border:1px solid #83d9bd;border-radius:8px;padding:9px 10px;font-weight:700}
 
 /* ==========================================================================
    5. MODULE 1 — ORBIT SKY TRACKER (radar-style polar plot)
@@ -416,7 +416,9 @@ body.logged-in #login-screen{display:none}
 }
 .tilt i{position:absolute;bottom:0;left:0;height:2px;background:var(--beacon)}
 
-footer{border-top:1px solid var(--line);padding:22px 0;color:var(--text-faint);font-size:.72rem;font-family:var(--mono)}
+footer{border-top:1px solid var(--line);padding:22px 0;margin-top:28px;color:var(--text-dim);font-size:.72rem;font-family:var(--mono);background:rgba(255,255,255,.55)}
+footer .wrap{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.action-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
 
 /* toast */
 #toasts{position:fixed;right:18px;bottom:18px;z-index:200;display:flex;flex-direction:column;gap:9px}

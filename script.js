@@ -268,6 +268,51 @@ $("#obsSubmit")?.addEventListener("click",()=>{
   $("#obsNotes").value="";renderObsLog();toast("Observation recorded locally","No external system has received this observation.");
 });
 
+function setActionStatus(id, pillText, heading, detail, kind="") {
+  const el = $(`#${id}`);
+  if (!el) return;
+  const pill = document.createElement("span");
+  pill.className = `pill ${kind}`;
+  pill.textContent = pillText;
+  const text = document.createElement("div");
+  text.className = "txt";
+  const title = document.createElement("b");
+  title.textContent = heading;
+  const description = document.createElement("span");
+  description.textContent = detail;
+  text.append(title, description);
+  el.replaceChildren(pill, text);
+}
+
+$("#authenticateDevice")?.addEventListener("click", () => {
+  setActionStatus("deviceStatus", "PENDING", "Device authentication requested", "Complete the station identity challenge before access is granted.", "warn");
+  toast("Device authentication", "The request was recorded locally.", "warn");
+});
+
+$("#accessDevice")?.addEventListener("click", () => {
+  setActionStatus("deviceStatus", "READY", "Device access is awaiting selection", "Connect the device registry to choose an approved station device.", "info");
+  toast("Device access", "No device registry is connected.", "warn");
+});
+
+$("#powerModeButton")?.addEventListener("click", (event) => {
+  const enabled = event.currentTarget.dataset.enabled === "true";
+  event.currentTarget.dataset.enabled = String(!enabled);
+  event.currentTarget.textContent = enabled ? "Enable optimisation mode" : "Disable optimisation mode";
+  $("#powerModePill").textContent = enabled ? "STANDBY" : "ACTIVE";
+  $("#powerModePill").className = `pill ${enabled ? "info" : "ok"}`;
+  $("#powerModeText").textContent = enabled
+    ? "Essential systems remain prioritised; optimisation is ready to activate."
+    : "Non-essential loads are reduced while communications and safety systems remain prioritised.";
+  toast("Power optimisation", enabled ? "Optimisation mode disabled." : "Optimisation mode enabled.");
+});
+
+$("#dataUpload")?.addEventListener("change", (event) => {
+  const file = event.target.files?.[0];
+  if (!file) return;
+  setActionStatus("uploadStatus", "QUEUED", file.name, `${Math.ceil(file.size / 1024)} KB queued locally for transfer.`, "info");
+  toast("Data queued", `${file.name} is ready for an authenticated transfer service.`);
+});
+
 /* Restore the last validated browser session, or show the login page. */
 restoreSession();
 markUnavailable(); renderMaint(); renderObsSelect(); renderObsLog(); renderThreads(); renderDocs();

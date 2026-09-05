@@ -98,26 +98,25 @@
 </header>
 
 <!-- Station-wide status strip — values remain blank until a live feed is connected -->
-<div class="statusstrip">
-  <div class="wrap">
-    <div class="sitem"><i class="dot" id="stDrs"></i>DRS <b id="vDrs">NO DATA</b></div>
-    <div class="sitem"><i class="dot warn" id="stHf"></i>HF/TTC <b id="vHf">NO DATA</b></div>
-    <div class="sitem">Kp <b id="vKp">—</b></div>
-    <div class="sitem">Temp <b id="vTemp">—</b></div>
-    <div class="sitem">Wind <b id="vWind">—</b></div>
-    <div class="sitem">Vis <b id="vVis">—</b></div>
-    <div class="sitem">PBL <b id="vPbl">—</b></div>
-    <div class="sitem"><i class="dot"></i>Blizzard watch <b>NO DATA</b></div>
-    <div class="sitem">Winter-over day <b id="vDay">—</b></div>
-  </div>
-</div>
-
 <main class="wrap">
 
 <!-- ==========================================================================
     MODULE 1 — VIEW TWIN MODEL
      ========================================================================== -->
 <section class="module active" id="m1" role="tabpanel">
+  <div class="statusstrip">
+    <div class="wrap">
+      <div class="sitem"><i class="dot" id="stDrs"></i>DRS <b id="vDrs">NO DATA</b></div>
+      <div class="sitem"><i class="dot warn" id="stHf"></i>HF/TTC <b id="vHf">NO DATA</b></div>
+      <div class="sitem">Kp <b id="vKp">—</b></div>
+      <div class="sitem">Temp <b id="vTemp">—</b></div>
+      <div class="sitem">Wind <b id="vWind">—</b></div>
+      <div class="sitem">Vis <b id="vVis">—</b></div>
+      <div class="sitem">PBL <b id="vPbl">—</b></div>
+      <div class="sitem"><i class="dot"></i>Blizzard watch <b>NO DATA</b></div>
+      <div class="sitem">Winter-over day <b id="vDay">—</b></div>
+    </div>
+  </div>
   <div class="modhead">
     <span class="num">MODULE 01</span>
     <h1>View Twin Model</h1>
@@ -327,8 +326,12 @@
   </div>
 
   <div class="panel simple-state">
-    <div class="phead"><div><h2>Infrastructure status</h2><div class="sub">One clear view of access conditions</div></div><span class="pill warn">NO DATA</span></div>
-    <div class="row"><span class="pill">WAITING</span><div class="txt"><b>Weather and route feed not connected</b><span>Connect an authoritative station feed to show wind, temperature, and access restrictions.</span></div></div>
+    <div class="phead"><div><h2>Device access</h2><div class="sub">Manage trusted station equipment</div></div><span class="pill info">LOCAL</span></div>
+    <div class="action-row">
+      <button class="btn primary sm" id="authenticateDevice" type="button">Authenticate new device</button>
+      <button class="btn ghost sm" id="accessDevice" type="button">Access device</button>
+    </div>
+    <div class="row" id="deviceStatus"><span class="pill">READY</span><div class="txt"><b>No device action pending</b><span>Authenticate a new device or access an existing trusted device.</span></div></div>
   </div>
 
 </section>
@@ -423,9 +426,9 @@
   </div>
 
   <div class="panel simple-state">
-    <div class="phead"><div><h2>Utilities status</h2><div class="sub">Power and station resource summary</div></div><span class="pill">NO DATA</span></div>
-    <div class="metric">—<small> kW</small></div>
-    <div class="sub">Connect the station utilities feed to display current demand.</div>
+    <div class="phead"><div><h2>Power optimisation mode</h2><div class="sub">Reduce non-essential load during constrained generation</div></div><span class="pill info" id="powerModePill">STANDBY</span></div>
+    <div class="row"><span class="pill">CONTROL</span><div class="txt"><b>Adaptive station power profile</b><span id="powerModeText">Essential systems remain prioritised; optimisation is ready to activate.</span></div></div>
+    <button class="btn primary sm" id="powerModeButton" type="button">Enable optimisation mode</button>
   </div>
 
 </section>
@@ -489,8 +492,10 @@
   </div>
 
   <div class="panel simple-state">
-    <div class="phead"><div><h2>Data transfer status</h2><div class="sub">Current station link and handoff state</div></div><span class="pill">NO DATA</span></div>
-    <div class="row"><span class="pill">WAITING</span><div class="txt"><b>No transfer is active</b><span>Connect the authenticated transfer service to show queue and delivery status.</span></div></div>
+    <div class="phead"><div><h2>Upload data</h2><div class="sub">Queue a local file for the authenticated transfer service</div></div><span class="pill info">LOCAL QUEUE</span></div>
+    <label class="drop" for="dataUpload"><b>Select data file</b><br /><span class="sub">The file remains local until a transfer service is connected.</span></label>
+    <input id="dataUpload" type="file" hidden />
+    <div class="row" id="uploadStatus"><span class="pill">WAITING</span><div class="txt"><b>No file queued</b><span>Choose a file to prepare it for transfer.</span></div></div>
   </div>
 
 </section>
@@ -549,8 +554,8 @@
   </div>
 
   <div class="panel simple-state">
-    <div class="phead"><div><h2>Alerts</h2><div class="sub">Priority issues requiring attention</div></div><span class="pill">NO DATA</span></div>
-    <div class="row"><span class="pill">CLEAR</span><div class="txt"><b>No connected alerts</b><span>Alerts will appear here when the station alert feed is connected.</span></div></div>
+    <div class="phead"><div><h2>Alert log</h2><div class="sub">Recent alerts recorded by this console</div></div><span class="pill info">LOCAL LOG</span></div>
+    <div class="list" id="alertLog"><div class="row"><span class="pill">CLEAR</span><div class="txt"><b>No alerts logged</b><span>Connected alert events will appear here.</span></div></div></div>
   </div>
 
 </section>
@@ -558,7 +563,7 @@
 </main>
 
 <footer>
-  <div class="wrap">POLARIS OPS · operational frontend · telemetry source: not connected</div>
+  <div class="wrap"><span>POLARIS OPS · Antarctic station console</span><span>Telemetry source: not connected · Local actions are not transmitted</span></div>
 </footer>
 
 <div id="toasts" aria-live="polite"></div>
