@@ -128,14 +128,6 @@ $$("#modnav .tab").forEach(tab=>tab.addEventListener("click",()=>{
   window.scrollTo({top:0,behavior:"smooth"});
 }));
 
-/* Clock only: this is local browser time, not operational telemetry. */
-function updateClock(){
-  const d=new Date();
-  $("#clkUtc").textContent=`${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}:${pad(d.getUTCSeconds())}`;
-  $("#clkLocal").textContent=`local ${pad(d.getHours())}:${pad(d.getMinutes())}`;
-}
-updateClock(); setInterval(updateClock,1000);
-
 /* ==========================================================================
    LIVE DATA HOOKS
    ========================================================================== */
@@ -262,10 +254,27 @@ function renderObsLog(){
     text.append(heading, notes, timestamp); row.append(pill, text); el.append(row);
   });
 }
+function renderAlertLog(){
+  const el=$("#alertLog"); if(!el)return;
+  el.replaceChildren();
+  if (!obs.length) {
+    appendTextRow(el, "CLEAR", "No alerts logged", "Connected alert events will appear here.");
+    return;
+  }
+  obs.forEach(o => {
+    const row=document.createElement("div"); row.className="row";
+    const pill=document.createElement("span"); pill.className=`pill ${o.sev === "Structural alert" ? "bad" : "warn"}`; pill.textContent=o.sev.toUpperCase();
+    const text=document.createElement("div"); text.className="txt";
+    const heading=document.createElement("b"); heading.textContent=`${o.asset} — ${o.type}`;
+    const notes=document.createElement("span"); notes.textContent=o.notes || "No notes.";
+    const timestamp=document.createElement("span"); timestamp.className="mono"; timestamp.textContent=o.at;
+    text.append(heading, notes, timestamp); row.append(pill, text); el.append(row);
+  });
+}
 $("#obsSubmit")?.addEventListener("click",()=>{
   if(!$("#obsAsset").value){toast("Select an asset","Choose the asset being observed.","warn");return;}
   obs.unshift({asset:$("#obsAsset").value,type:$("#obsType").value,sev:$("#obsSev").value,notes:$("#obsNotes").value.trim(),at:new Date().toISOString()});
-  $("#obsNotes").value="";renderObsLog();toast("Observation recorded locally","No external system has received this observation.");
+  $("#obsNotes").value="";renderObsLog();renderAlertLog();toast("Observation recorded locally","No external system has received this observation.");
 });
 
 function setActionStatus(id, pillText, heading, detail, kind="") {
@@ -315,7 +324,7 @@ $("#dataUpload")?.addEventListener("change", (event) => {
 
 /* Restore the last validated browser session, or show the login page. */
 restoreSession();
-markUnavailable(); renderMaint(); renderObsSelect(); renderObsLog(); renderThreads(); renderDocs();
+markUnavailable(); renderMaint(); renderObsSelect(); renderObsLog(); renderAlertLog(); renderThreads(); renderDocs();
 
 import * as THREE from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";

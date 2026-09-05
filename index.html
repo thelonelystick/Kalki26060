@@ -92,7 +92,6 @@
       <button class="tab" role="tab" data-mod="m5" aria-selected="false">05 · Alerts</button>
     </nav>
 
-    <div class="clock"><b id="clkUtc">--:--:--</b> UTC<br /><span id="clkLocal">station --:--</span></div>
     <button class="btn ghost sm" id="logoutButton" type="button">Log out</button>
   </div>
 </header>
@@ -113,7 +112,6 @@
       <div class="sitem">Wind <b id="vWind">—</b></div>
       <div class="sitem">Vis <b id="vVis">—</b></div>
       <div class="sitem">PBL <b id="vPbl">—</b></div>
-      <div class="sitem"><i class="dot"></i>Blizzard watch <b>NO DATA</b></div>
       <div class="sitem">Winter-over day <b id="vDay">—</b></div>
     </div>
   </div>
@@ -255,39 +253,6 @@
   <div class="grid g-2-1" style="margin-bottom:16px">
     <div class="panel">
       <div class="phead">
-        <div><h2>Micro-Climatic Forecast &amp; Blizzard Warning</h2><div class="sub">Coastal season baseline: documented seasonal blizzard frequency</div></div>
-        <span class="pill bad">NO LIVE ALERT</span>
-      </div>
-
-      <div class="grid g3" style="margin-bottom:14px">
-        <div>
-          <div class="label">Sustained wind</div>
-          <div class="metric" id="wSpd">—<small>kt</small></div>
-          <div class="sub">Awaiting wind feed</div>
-        </div>
-        <div>
-          <div class="label">MSL pressure trend</div>
-          <div class="metric" id="wPres">—<small>hPa</small></div>
-          <div class="sub" id="wPresTrend">Awaiting pressure feed</div>
-        </div>
-        <div>
-          <div class="label">Wind direction</div>
-          <div class="wind"><div class="arrow" id="windArrow"></div></div>
-        </div>
-      </div>
-
-      <div class="label" style="margin-bottom:6px">Pressure &amp; wind, last 24 h</div>
-      <svg class="spark" id="presSpark" viewBox="0 0 600 96" preserveAspectRatio="none">
-        <defs><linearGradient id="gradA" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stop-color="rgba(111,183,255,.35)" /><stop offset="100%" stop-color="rgba(111,183,255,0)" />
-        </linearGradient></defs>
-      </svg>
-
-      <div class="list" style="margin-top:14px" id="opsWindows"></div>
-    </div>
-
-    <div class="panel">
-      <div class="phead">
         <div><h2>Rain &amp; Slush Advisory</h2><div class="sub">Liquid precipitation monitor · T &gt; 0 °C</div></div>
         <span class="pill warn" id="rainPill">WATCH</span>
       </div>
@@ -423,6 +388,18 @@
         <p class="sub" style="margin-top:10px">A permit cannot be forwarded to the competent authority until every biosecurity item is cleared and both statutory documents are attached.</p>
       </div>
     </div>
+  </div>
+
+  <div class="panel simple-state">
+    <div class="phead"><div><h2>Energy usage tracker</h2><div class="sub">Station demand against the daily operating budget</div></div><span class="pill info">NO DATA</span></div>
+    <div class="metric">—<small> kWh today</small></div>
+    <div class="bar" style="margin:10px 0"><i style="width:0%"></i></div>
+    <div class="sub">Connect the utilities feed to display measured consumption.</div>
+  </div>
+
+  <div class="panel simple-state">
+    <div class="phead"><div><h2>Next shipment</h2><div class="sub">Upcoming station logistics movement</div></div><span class="pill info">NO DATA</span></div>
+    <div class="row"><span class="pill">SCHEDULED</span><div class="txt"><b>Shipment details unavailable</b><span>Connect the logistics feed to show the next vessel or airlift arrival.</span></div></div>
   </div>
 
   <div class="panel simple-state">
