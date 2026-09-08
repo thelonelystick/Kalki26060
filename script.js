@@ -1,4 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
+import localDataset from "./assets/polaris-dataset.json";
 
 const publicSupabaseUrl = "https://alymfzfgpqcvbcptwafg.supabase.co";
 const publicSupabasePublishableKey =
@@ -237,8 +238,7 @@ function renderAlerts(data) {
 async function loadDataset() {
   try {
     const response = await fetch(DATASET_URL);
-    if (!response.ok) throw new Error(`Dataset request failed (${response.status})`);
-    const data = await response.json();
+    const data = response.ok ? await response.json() : localDataset;
     renderStationData(data);
     renderPasses(data.passes);
     $("#autoSched")?.addEventListener("click", () => {
@@ -250,7 +250,11 @@ async function loadDataset() {
     renderAlerts(data);
   } catch (error) {
     console.error("Unable to load Polaris dataset", error);
-    toast("Dataset unavailable", "The console remains in its no-data state.", "bad");
+    renderStationData(localDataset);
+    renderPasses(localDataset.passes);
+    renderStorm(localDataset.storm);
+    renderTimeline(localDataset.supportTimeline);
+    renderAlerts(localDataset);
   }
 }
 
