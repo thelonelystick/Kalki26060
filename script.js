@@ -276,11 +276,31 @@ function renderTransfer(data) {
   renderTimeline(data.phases);
 }
 
-function renderAllModuleData() {
-  renderInfrastructure(infrastructureDataset);
-  renderUtilities(utilitiesDataset);
-  renderTransfer(transferDataset);
-  renderAlerts(alertsDataset);
+function renderAllModuleData(data = {}) {
+  renderInfrastructure(data.infrastructure || infrastructureDataset);
+  renderUtilities(data.utilities || utilitiesDataset);
+  renderTransfer(data.transfer || transferDataset);
+  renderAlerts(data.alerts || alertsDataset);
+}
+
+async function loadBackendDatasets() {
+  const sources = {
+    infrastructure: infrastructureDataset,
+    utilities: utilitiesDataset,
+    transfer: transferDataset,
+    alerts: alertsDataset
+  };
+  await Promise.all(Object.keys(sources).map(async moduleName => {
+    try {
+      const response = await fetch(`/api/datasets/${moduleName}`);
+      if (!response.ok) return;
+      const payload = await response.json();
+      if (payload.data) sources[moduleName] = payload.data;
+    } catch (error) {
+      console.warn(`Backend dataset unavailable: ${moduleName}`, error);
+    }
+  }));
+  return sources;
 }
 
 async function loadDataset() {
@@ -294,7 +314,7 @@ async function loadDataset() {
       toast("Passes scheduled", `${Math.min(6, data.passes.length)} capture window(s) added to the queue.`);
     });
     renderStorm(data.storm);
-    renderAllModuleData();
+    renderAllModuleData(await loadBackendDatasets());
   } catch (error) {
     console.error("Unable to load Polaris dataset", error);
     renderStationData(localDataset);
