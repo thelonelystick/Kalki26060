@@ -1,5 +1,9 @@
 import { createClient } from "@supabase/supabase-js";
 import localDataset from "./assets/polaris-dataset.json";
+import infrastructureDataset from "./assets/infrastructure-dataset.json";
+import utilitiesDataset from "./assets/utilities-dataset.json";
+import transferDataset from "./assets/data-transfer-dataset.json";
+import alertsDataset from "./assets/alerts-dataset.json";
 
 const publicSupabaseUrl = "https://alymfzfgpqcvbcptwafg.supabase.co";
 const publicSupabasePublishableKey =
@@ -235,6 +239,50 @@ function renderAlerts(data) {
   setText("heritagePill", `${structural} structural alert${structural === 1 ? "" : "s"}`);
 }
 
+function renderInfrastructure(data) {
+  const list = $("#deviceList");
+  if (!list) return;
+  list.innerHTML = data.devices.map(device => `<div class="row"><span class="pill ${device.status === "TRUSTED" ? "ok" : "warn"}">${device.status}</span><div class="txt"><b>${device.name}</b><span>${device.type} · last seen ${device.lastSeen}</span></div></div>`).join("");
+}
+
+function renderUtilities(data) {
+  const energyPercent = Math.round((data.energy.usedKwh / data.energy.budgetKwh) * 100);
+  setText("energyUsed", data.energy.usedKwh);
+  setText("energyTrend", `${data.energy.trend} · budget ${data.energy.budgetKwh.toLocaleString()} kWh`);
+  const energyBar = $("#energyBar");
+  if (energyBar) energyBar.style.width = `${Math.min(energyPercent, 100)}%`;
+  const shipment = data.shipment;
+  const shipmentStatus = $("#shipmentStatus");
+  if (shipmentStatus) shipmentStatus.innerHTML = `<span class="pill ok">${shipment.status}</span><div class="txt"><b>${shipment.name} · ${shipment.mode}</b><span>ETA ${shipment.eta} · ${shipment.cargo}</span></div>`;
+  const bioList = $("#bioList");
+  if (!bioList) return;
+  bioList.innerHTML = data.biosecurity.map((item, index) => `<label class="row check ${item.complete ? "done" : ""}"><input type="checkbox" data-bio-index="${index}" ${item.complete ? "checked" : ""}/><div class="txt"><b>${item.label}</b><span>${item.complete ? "Cleared" : "Action required"}</span></div></label>`).join("");
+  const updateBioScore = () => {
+    const complete = $$("#bioList input").filter(input => input.checked).length;
+    const score = Math.round((complete / data.biosecurity.length) * 100);
+    setText("bioScore", score);
+    const bioBar = $("#bioBar");
+    if (bioBar) bioBar.style.width = `${score}%`;
+  };
+  $$("#bioList input").forEach(input => input.addEventListener("change", () => {
+    input.closest(".check")?.classList.toggle("done", input.checked);
+    updateBioScore();
+  }));
+  updateBioScore();
+}
+
+function renderTransfer(data) {
+  setText("transferQueueSummary", `${data.queue.queuedFiles} files · ${data.queue.queuedGb} GB queued · next window ${data.queue.nextWindow} · ${data.queue.protocol}`);
+  renderTimeline(data.phases);
+}
+
+function renderAllModuleData() {
+  renderInfrastructure(infrastructureDataset);
+  renderUtilities(utilitiesDataset);
+  renderTransfer(transferDataset);
+  renderAlerts(alertsDataset);
+}
+
 async function loadDataset() {
   try {
     const response = await fetch(DATASET_URL);
@@ -246,15 +294,13 @@ async function loadDataset() {
       toast("Passes scheduled", `${Math.min(6, data.passes.length)} capture window(s) added to the queue.`);
     });
     renderStorm(data.storm);
-    renderTimeline(data.supportTimeline);
-    renderAlerts(data);
+    renderAllModuleData();
   } catch (error) {
     console.error("Unable to load Polaris dataset", error);
     renderStationData(localDataset);
     renderPasses(localDataset.passes);
     renderStorm(localDataset.storm);
-    renderTimeline(localDataset.supportTimeline);
-    renderAlerts(localDataset);
+    renderAllModuleData();
   }
 }
 

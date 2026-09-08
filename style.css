@@ -113,11 +113,6 @@ button,input,select,textarea{font:inherit;color:inherit}
 .simple-state .metric{margin-top:8px}
 .simple-state .row{margin-top:12px}
 #m1 > .grid.g3,#m1 > .grid.g-1-2,#m1 > .grid.g-2-1{display:none}
-#m2 > .grid.g-2-1 > .panel:nth-child(2),#m2 > .panel:not(.simple-state){display:none}
-#m2 > .grid.g-2-1{grid-template-columns:1fr}
-#m3 > .grid,#m3 > .panel:not(.simple-state),
-#m4 > .grid,#m4 > .panel:not(.simple-state),
-#m5 > .grid,#m5 > .panel:not(.simple-state){display:none}
 
 /* scrollbars */
 ::-webkit-scrollbar{width:10px;height:10px}
