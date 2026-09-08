@@ -17,6 +17,7 @@ export default function handler(request, response) {
     return;
   }
 
+  // Indicate that this dataset may be edited via the DOM (client-side)
   response.setHeader("Cache-Control", "s-maxage=60, stale-while-revalidate=300");
-  response.status(200).json({ module: moduleName, data: dataset });
+  response.status(200).json({ module: moduleName, data: dataset, dom: true });
 }
