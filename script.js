@@ -27,6 +27,7 @@ const MODEL_URL = new URL(
   ((typeof window !== "undefined" && window.__ENV__?.MODEL_URL) || "assets/landscape.glb"),
   document.baseURI
 ).href;
+const DATASET_URL = new URL("assets/polaris-dataset.json", document.baseURI);
 
 const loginForm = $("#loginForm");
 const loginStatus = $("#loginStatus");
@@ -141,6 +142,116 @@ function markUnavailable(){
   const pillMap={trackPill:"NO DATA",stormPill:"NO DATA",rainPill:"NO DATA"};
   Object.entries(pillMap).forEach(([id,text])=>{const el=$("#"+id);if(el)el.textContent=text;});
   ["kLinkBar","rTempBar","bioBar"].forEach(id=>{const el=$("#"+id);if(el)el.style.width="0%";});
+}
+
+function setText(id, value) {
+  const el = $("#" + id);
+  if (el) el.textContent = value;
+}
+
+function renderStationData(data) {
+  const station = data.station;
+  setText("vDrs", station.drs);
+  setText("vHf", station.hf);
+  setText("vKp", station.kp);
+  setText("vTemp", `${station.temperature}°C`);
+  setText("vWind", `${station.wind} kt`);
+  setText("vVis", `${station.visibility} km`);
+  setText("vPbl", `${station.pbl} m`);
+  setText("vDay", station.winterOverDay);
+  setText("kOrbits", station.orbits);
+  setText("kData", station.dataCapturedTb.toFixed(1));
+  setText("kLink", station.linkAvailability);
+  const linkBar = $("#kLinkBar");
+  if (linkBar) linkBar.style.width = `${station.linkAvailability}%`;
+  setText("trackPill", `${data.passes.length} WINDOWS`);
+  $("#trackPill")?.classList.replace("ok", "info");
+}
+
+function renderPasses(passes) {
+  const list = $("#passList");
+  const traces = $("#traces");
+  if (!list || !traces) return;
+  list.innerHTML = passes.map(pass => `
+    <button class="passcard ${pass.status === "SCHEDULED" ? "sel" : ""}" data-pass-id="${pass.id}" type="button">
+      <i class="swatch" style="background:${pass.color}"></i>
+      <span class="txt"><b>${pass.satellite}</b><span>${pass.window} · ${pass.elevation}° max elevation</span></span>
+      <span class="pill ${pass.status === "SCHEDULED" ? "ok" : "info"}">${pass.status}</span>
+    </button>`).join("");
+  traces.innerHTML = passes.map(pass => {
+    const angle = pass.azimuth * Math.PI / 180;
+    const radius = 90 * (1 - pass.elevation / 90);
+    const x = 100 + radius * Math.sin(angle);
+    const y = 100 - radius * Math.cos(angle);
+    return `<circle class="sat" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" fill="${pass.color}" data-pass-id="${pass.id}"/>`;
+  }).join("");
+  $$("#passList .passcard").forEach(card => card.addEventListener("click", () => {
+    $$("#passList .passcard").forEach(item => item.classList.remove("sel"));
+    card.classList.add("sel");
+    toast("Capture window selected", `${card.querySelector("b").textContent} is ready for scheduling.`);
+  }));
+}
+
+function renderStorm(storm) {
+  setText("stormPill", storm.level);
+  const bars = $("#kpBars");
+  const alerts = $("#stormAlerts");
+  if (bars) bars.innerHTML = storm.forecast.map(level => `<div data-lvl="${level >= 6 ? "high" : level >= 4 ? "mid" : "low"}" style="height:${Math.max(14, level * 14)}%" title="Kp ${level}"></div>`).join("");
+  if (alerts) alerts.innerHTML = storm.alerts.map(alert => `<div class="row"><span class="pill ${alert.severity === "WARN" ? "warn" : "info"}">${alert.severity}</span><div class="txt"><b>${alert.title}</b><span>${alert.detail}</span></div></div>`).join("");
+}
+
+function renderTimeline(phases) {
+  const timeline = $("#timeline");
+  if (!timeline) return;
+  timeline.innerHTML = phases.map((phase, index) => `<button class="step ${index === 0 ? "active" : ""}" data-phase-index="${index}" type="button"><b>${phase.month}</b>${phase.label}</button>`).join("");
+  const renderPhase = index => {
+    const phase = phases[index];
+    setText("phaseTitle", `${phase.month} · ${phase.label}`);
+    setText("phaseSub", phase.phase);
+    setText("phasePill", phase.status);
+    setText("phaseDesc", phase.description);
+    const gauges = $("#phaseGauges");
+    const actions = $("#phaseActions");
+    if (gauges) gauges.innerHTML = phase.gauges.map(gauge => `<div class="gauge-row"><span>${gauge.label}</span><b>${gauge.value}%</b><i><em style="width:${gauge.value}%"></em></i></div>`).join("");
+    if (actions) actions.innerHTML = phase.actions.map(action => `<div class="row"><span class="pill info">ACTION</span><div class="txt"><b>${action}</b><span>Suggested local support action.</span></div></div>`).join("");
+  };
+  $$("#timeline .step").forEach(step => step.addEventListener("click", () => {
+    $$("#timeline .step").forEach(item => item.classList.remove("active"));
+    step.classList.add("active");
+    renderPhase(Number(step.dataset.phaseIndex));
+  }));
+  renderPhase(0);
+}
+
+function renderAlerts(data) {
+  const siteRows = $("#siteRows");
+  const heritageCards = $("#heritageCards");
+  if (siteRows) siteRows.innerHTML = data.sites.map(site => `<tr><td>${site.name}</td><td><span class="pill ${site.access === "OPEN" ? "ok" : "warn"}">${site.access}</span></td><td class="mono">${site.meltwater}</td><td class="mono">${site.delay}</td><td>${site.route}</td></tr>`).join("");
+  if (heritageCards) heritageCards.innerHTML = data.heritage.map(item => `<div class="row"><span class="pill ${item.kind}">${item.status}</span><div class="txt"><b>${item.name}</b><span>${item.detail}</span></div></div>`).join("");
+  const restricted = data.sites.filter(site => site.access !== "OPEN").length;
+  const structural = data.heritage.filter(item => item.kind === "bad").length;
+  setText("sitePill", `${restricted} sites restricted`);
+  setText("heritagePill", `${structural} structural alert${structural === 1 ? "" : "s"}`);
+}
+
+async function loadDataset() {
+  try {
+    const response = await fetch(DATASET_URL);
+    if (!response.ok) throw new Error(`Dataset request failed (${response.status})`);
+    const data = await response.json();
+    renderStationData(data);
+    renderPasses(data.passes);
+    $("#autoSched")?.addEventListener("click", () => {
+      renderPasses(data.passes.map(pass => ({ ...pass, status: "SCHEDULED" })));
+      toast("Passes scheduled", `${Math.min(6, data.passes.length)} capture window(s) added to the queue.`);
+    });
+    renderStorm(data.storm);
+    renderTimeline(data.supportTimeline);
+    renderAlerts(data);
+  } catch (error) {
+    console.error("Unable to load Polaris dataset", error);
+    toast("Dataset unavailable", "The console remains in its no-data state.", "bad");
+  }
 }
 
 /* ==========================================================================
@@ -325,6 +436,7 @@ $("#dataUpload")?.addEventListener("change", (event) => {
 /* Restore the last validated browser session, or show the login page. */
 restoreSession();
 markUnavailable(); renderMaint(); renderObsSelect(); renderObsLog(); renderAlertLog(); renderThreads(); renderDocs();
+loadDataset();
 
 import * as THREE from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
