@@ -2,20 +2,25 @@
 
 Digital platform for efficient remote management of Indian Antarctic Research Stations.
 
-## Development
+## Local data sources
 
-```bash
-npm install
-npm run dev
-```
+The console bundles non-authoritative fixture data for each operational module:
 
-Create `.env` from `.env.example` for local Supabase configuration. Only the
-publishable/anon key belongs in browser configuration.
+- `assets/infrastructure-dataset.json` — trusted station devices
+- `assets/utilities-dataset.json` — energy, shipment, and biosecurity state
+- `assets/data-transfer-dataset.json` — transfer queue and support phases
+- `assets/alerts-dataset.json` — site access and heritage alerts
 
-```bash
-npm run build
-```
+Replace these fixtures with authenticated station feeds before using the values operationally.
 
-Login credentials are checked by the Supabase `verify_login` RPC against the
-`public.login` table. Operational telemetry is intentionally shown as unavailable
-until an authoritative backend and RLS policies are connected.
+## Backend endpoints
+
+The Vercel backend exposes:
+
+- `GET /api/health` — service health and timestamp
+- `GET /api/datasets/infrastructure` — trusted device data
+- `GET /api/datasets/utilities` — energy, shipment, and biosecurity data
+- `GET /api/datasets/transfer` — transfer queue and support phases
+- `GET /api/datasets/alerts` — site and heritage alert data
+
+The frontend requests these endpoints first and uses the bundled fixtures when an endpoint is unavailable during local development or deployment transitions.

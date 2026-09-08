@@ -1,4 +1,9 @@
 import { createClient } from "@supabase/supabase-js";
+import localDataset from "./assets/polaris-dataset.json";
+import infrastructureDataset from "./assets/infrastructure-dataset.json";
+import utilitiesDataset from "./assets/utilities-dataset.json";
+import transferDataset from "./assets/data-transfer-dataset.json";
+import alertsDataset from "./assets/alerts-dataset.json";
 
 const publicSupabaseUrl = "https://alymfzfgpqcvbcptwafg.supabase.co";
 const publicSupabasePublishableKey =
@@ -27,6 +32,7 @@ const MODEL_URL = new URL(
   ((typeof window !== "undefined" && window.__ENV__?.MODEL_URL) || "assets/landscape.glb"),
   document.baseURI
 ).href;
+const DATASET_URL = new URL("assets/polaris-dataset.json", document.baseURI);
 
 const loginForm = $("#loginForm");
 const loginStatus = $("#loginStatus");
@@ -141,6 +147,181 @@ function markUnavailable(){
   const pillMap={trackPill:"NO DATA",stormPill:"NO DATA",rainPill:"NO DATA"};
   Object.entries(pillMap).forEach(([id,text])=>{const el=$("#"+id);if(el)el.textContent=text;});
   ["kLinkBar","rTempBar","bioBar"].forEach(id=>{const el=$("#"+id);if(el)el.style.width="0%";});
+}
+
+function setText(id, value) {
+  const el = $("#" + id);
+  if (el) el.textContent = value;
+}
+
+function renderStationData(data) {
+  const station = data.station;
+  setText("vDrs", station.drs);
+  setText("vHf", station.hf);
+  setText("vKp", station.kp);
+  setText("vTemp", `${station.temperature}°C`);
+  setText("vWind", `${station.wind} kt`);
+  setText("vVis", `${station.visibility} km`);
+  setText("vPbl", `${station.pbl} m`);
+  setText("vDay", station.winterOverDay);
+  setText("kOrbits", station.orbits);
+  setText("kData", station.dataCapturedTb.toFixed(1));
+  setText("kLink", station.linkAvailability);
+  const linkBar = $("#kLinkBar");
+  if (linkBar) linkBar.style.width = `${station.linkAvailability}%`;
+  setText("trackPill", `${data.passes.length} WINDOWS`);
+  $("#trackPill")?.classList.replace("ok", "info");
+}
+
+function renderPasses(passes) {
+  const list = $("#passList");
+  const traces = $("#traces");
+  if (!list || !traces) return;
+  list.innerHTML = passes.map(pass => `
+    <button class="passcard ${pass.status === "SCHEDULED" ? "sel" : ""}" data-pass-id="${pass.id}" type="button">
+      <i class="swatch" style="background:${pass.color}"></i>
+      <span class="txt"><b>${pass.satellite}</b><span>${pass.window} · ${pass.elevation}° max elevation</span></span>
+      <span class="pill ${pass.status === "SCHEDULED" ? "ok" : "info"}">${pass.status}</span>
+    </button>`).join("");
+  traces.innerHTML = passes.map(pass => {
+    const angle = pass.azimuth * Math.PI / 180;
+    const radius = 90 * (1 - pass.elevation / 90);
+    const x = 100 + radius * Math.sin(angle);
+    const y = 100 - radius * Math.cos(angle);
+    return `<circle class="sat" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" fill="${pass.color}" data-pass-id="${pass.id}"/>`;
+  }).join("");
+  $$("#passList .passcard").forEach(card => card.addEventListener("click", () => {
+    $$("#passList .passcard").forEach(item => item.classList.remove("sel"));
+    card.classList.add("sel");
+    toast("Capture window selected", `${card.querySelector("b").textContent} is ready for scheduling.`);
+  }));
+}
+
+function renderStorm(storm) {
+  setText("stormPill", storm.level);
+  const bars = $("#kpBars");
+  const alerts = $("#stormAlerts");
+  if (bars) bars.innerHTML = storm.forecast.map(level => `<div data-lvl="${level >= 6 ? "high" : level >= 4 ? "mid" : "low"}" style="height:${Math.max(14, level * 14)}%" title="Kp ${level}"></div>`).join("");
+  if (alerts) alerts.innerHTML = storm.alerts.map(alert => `<div class="row"><span class="pill ${alert.severity === "WARN" ? "warn" : "info"}">${alert.severity}</span><div class="txt"><b>${alert.title}</b><span>${alert.detail}</span></div></div>`).join("");
+}
+
+function renderTimeline(phases) {
+  const timeline = $("#timeline");
+  if (!timeline) return;
+  timeline.innerHTML = phases.map((phase, index) => `<button class="step ${index === 0 ? "active" : ""}" data-phase-index="${index}" type="button"><b>${phase.month}</b>${phase.label}</button>`).join("");
+  const renderPhase = index => {
+    const phase = phases[index];
+    setText("phaseTitle", `${phase.month} · ${phase.label}`);
+    setText("phaseSub", phase.phase);
+    setText("phasePill", phase.status);
+    setText("phaseDesc", phase.description);
+    const gauges = $("#phaseGauges");
+    const actions = $("#phaseActions");
+    if (gauges) gauges.innerHTML = phase.gauges.map(gauge => `<div class="gauge-row"><span>${gauge.label}</span><b>${gauge.value}%</b><i><em style="width:${gauge.value}%"></em></i></div>`).join("");
+    if (actions) actions.innerHTML = phase.actions.map(action => `<div class="row"><span class="pill info">ACTION</span><div class="txt"><b>${action}</b><span>Suggested local support action.</span></div></div>`).join("");
+  };
+  $$("#timeline .step").forEach(step => step.addEventListener("click", () => {
+    $$("#timeline .step").forEach(item => item.classList.remove("active"));
+    step.classList.add("active");
+    renderPhase(Number(step.dataset.phaseIndex));
+  }));
+  renderPhase(0);
+}
+
+function renderAlerts(data) {
+  const siteRows = $("#siteRows");
+  const heritageCards = $("#heritageCards");
+  if (siteRows) siteRows.innerHTML = data.sites.map(site => `<tr><td>${site.name}</td><td><span class="pill ${site.access === "OPEN" ? "ok" : "warn"}">${site.access}</span></td><td class="mono">${site.meltwater}</td><td class="mono">${site.delay}</td><td>${site.route}</td></tr>`).join("");
+  if (heritageCards) heritageCards.innerHTML = data.heritage.map(item => `<div class="row"><span class="pill ${item.kind}">${item.status}</span><div class="txt"><b>${item.name}</b><span>${item.detail}</span></div></div>`).join("");
+  const restricted = data.sites.filter(site => site.access !== "OPEN").length;
+  const structural = data.heritage.filter(item => item.kind === "bad").length;
+  setText("sitePill", `${restricted} sites restricted`);
+  setText("heritagePill", `${structural} structural alert${structural === 1 ? "" : "s"}`);
+}
+
+function renderInfrastructure(data) {
+  const list = $("#deviceList");
+  if (!list) return;
+  list.innerHTML = data.devices.map(device => `<div class="row"><span class="pill ${device.status === "TRUSTED" ? "ok" : "warn"}">${device.status}</span><div class="txt"><b>${device.name}</b><span>${device.type} · last seen ${device.lastSeen}</span></div></div>`).join("");
+}
+
+function renderUtilities(data) {
+  const energyPercent = Math.round((data.energy.usedKwh / data.energy.budgetKwh) * 100);
+  setText("energyUsed", data.energy.usedKwh);
+  setText("energyTrend", `${data.energy.trend} · budget ${data.energy.budgetKwh.toLocaleString()} kWh`);
+  const energyBar = $("#energyBar");
+  if (energyBar) energyBar.style.width = `${Math.min(energyPercent, 100)}%`;
+  const shipment = data.shipment;
+  const shipmentStatus = $("#shipmentStatus");
+  if (shipmentStatus) shipmentStatus.innerHTML = `<span class="pill ok">${shipment.status}</span><div class="txt"><b>${shipment.name} · ${shipment.mode}</b><span>ETA ${shipment.eta} · ${shipment.cargo}</span></div>`;
+  const bioList = $("#bioList");
+  if (!bioList) return;
+  bioList.innerHTML = data.biosecurity.map((item, index) => `<label class="row check ${item.complete ? "done" : ""}"><input type="checkbox" data-bio-index="${index}" ${item.complete ? "checked" : ""}/><div class="txt"><b>${item.label}</b><span>${item.complete ? "Cleared" : "Action required"}</span></div></label>`).join("");
+  const updateBioScore = () => {
+    const complete = $$("#bioList input").filter(input => input.checked).length;
+    const score = Math.round((complete / data.biosecurity.length) * 100);
+    setText("bioScore", score);
+    const bioBar = $("#bioBar");
+    if (bioBar) bioBar.style.width = `${score}%`;
+  };
+  $$("#bioList input").forEach(input => input.addEventListener("change", () => {
+    input.closest(".check")?.classList.toggle("done", input.checked);
+    updateBioScore();
+  }));
+  updateBioScore();
+}
+
+function renderTransfer(data) {
+  setText("transferQueueSummary", `${data.queue.queuedFiles} files · ${data.queue.queuedGb} GB queued · next window ${data.queue.nextWindow} · ${data.queue.protocol}`);
+  renderTimeline(data.phases);
+}
+
+function renderAllModuleData(data = {}) {
+  renderInfrastructure(data.infrastructure || infrastructureDataset);
+  renderUtilities(data.utilities || utilitiesDataset);
+  renderTransfer(data.transfer || transferDataset);
+  renderAlerts(data.alerts || alertsDataset);
+}
+
+async function loadBackendDatasets() {
+  const sources = {
+    infrastructure: infrastructureDataset,
+    utilities: utilitiesDataset,
+    transfer: transferDataset,
+    alerts: alertsDataset
+  };
+  await Promise.all(Object.keys(sources).map(async moduleName => {
+    try {
+      const response = await fetch(`/api/datasets/${moduleName}`);
+      if (!response.ok) return;
+      const payload = await response.json();
+      if (payload.data) sources[moduleName] = payload.data;
+    } catch (error) {
+      console.warn(`Backend dataset unavailable: ${moduleName}`, error);
+    }
+  }));
+  return sources;
+}
+
+async function loadDataset() {
+  try {
+    const response = await fetch(DATASET_URL);
+    const data = response.ok ? await response.json() : localDataset;
+    renderStationData(data);
+    renderPasses(data.passes);
+    $("#autoSched")?.addEventListener("click", () => {
+      renderPasses(data.passes.map(pass => ({ ...pass, status: "SCHEDULED" })));
+      toast("Passes scheduled", `${Math.min(6, data.passes.length)} capture window(s) added to the queue.`);
+    });
+    renderStorm(data.storm);
+    renderAllModuleData(await loadBackendDatasets());
+  } catch (error) {
+    console.error("Unable to load Polaris dataset", error);
+    renderStationData(localDataset);
+    renderPasses(localDataset.passes);
+    renderStorm(localDataset.storm);
+    renderAllModuleData();
+  }
 }
 
 /* ==========================================================================
@@ -325,6 +506,7 @@ $("#dataUpload")?.addEventListener("change", (event) => {
 /* Restore the last validated browser session, or show the login page. */
 restoreSession();
 markUnavailable(); renderMaint(); renderObsSelect(); renderObsLog(); renderAlertLog(); renderThreads(); renderDocs();
+loadDataset();
 
 import * as THREE from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";

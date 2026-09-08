@@ -252,6 +252,7 @@
       <button class="btn ghost sm" id="accessDevice" type="button">Access device</button>
     </div>
     <div class="row" id="deviceStatus"><span class="pill">READY</span><div class="txt"><b>No device action pending</b><span>Authenticate a new device or access an existing trusted device.</span></div></div>
+    <div class="list" id="deviceList" style="margin-top:14px"></div>
   </div>
 
 </section>
@@ -345,14 +346,14 @@
 
   <div class="panel simple-state">
     <div class="phead"><div><h2>Energy usage tracker</h2><div class="sub">Station demand against the daily operating budget</div></div><span class="pill info">NO DATA</span></div>
-    <div class="metric">—<small> kWh today</small></div>
-    <div class="bar" style="margin:10px 0"><i style="width:0%"></i></div>
-    <div class="sub">Connect the utilities feed to display measured consumption.</div>
+    <div class="metric" id="energyUsed">—<small> kWh today</small></div>
+    <div class="bar" style="margin:10px 0"><i id="energyBar" style="width:0%"></i></div>
+    <div class="sub" id="energyTrend">Awaiting utilities source.</div>
   </div>
 
   <div class="panel simple-state">
     <div class="phead"><div><h2>Next shipment</h2><div class="sub">Upcoming station logistics movement</div></div><span class="pill info">NO DATA</span></div>
-    <div class="row"><span class="pill">SCHEDULED</span><div class="txt"><b>Shipment details unavailable</b><span>Connect the logistics feed to show the next vessel or airlift arrival.</span></div></div>
+    <div class="row" id="shipmentStatus"><span class="pill">SCHEDULED</span><div class="txt"><b>Shipment details unavailable</b><span>Connect the logistics feed to show the next vessel or airlift arrival.</span></div></div>
   </div>
 
   <div class="panel simple-state">
@@ -420,7 +421,7 @@
   </div>
 
   <div class="panel simple-state">
-    <div class="phead"><div><h2>Upload data</h2><div class="sub">Choose a file to add to the transfer queue</div></div><span class="pill info">LOCAL QUEUE</span></div>
+    <div class="phead"><div><h2>Upload data</h2><div class="sub" id="transferQueueSummary">Choose a file to add to the transfer queue</div></div><span class="pill info">LOCAL QUEUE</span></div>
     <label class="drop" for="dataUpload"><b>Select data file</b><br /><span class="sub">Files are queued in this browser.</span></label>
     <input id="dataUpload" type="file" hidden />
     <div class="row" id="uploadStatus"><span class="pill">WAITING</span><div class="txt"><b>No file queued</b><span>Choose a file to prepare it for transfer.</span></div></div>
