@@ -252,7 +252,7 @@
       <button class="btn ghost sm" id="accessDevice" type="button">Access device</button>
     </div>
     <div class="row" id="deviceStatus"><span class="pill">READY</span><div class="txt"><b>No device action pending</b><span>Authenticate a new device or access an existing trusted device.</span></div></div>
-    <div class="list" id="deviceList" style="margin-top:14px"></div>
+    <div class="list" id="deviceList" data-dataset="infrastructure" data-dataset-collection="devices" style="margin-top:14px"></div>
   </div>
 
 </section>
@@ -333,7 +333,7 @@
     <div class="grid g2" style="margin-top:16px">
       <div>
         <h3 style="margin-bottom:8px">Pre-departure biosecurity checklist</h3>
-        <div class="list" id="bioList"></div>
+        <div class="list" id="bioList" data-dataset="utilities" data-dataset-collection="biosecurity"></div>
       </div>
       <div>
         <h3 style="margin-bottom:8px">Compliance score</h3>
@@ -346,14 +346,14 @@
 
   <div class="panel simple-state">
     <div class="phead"><div><h2>Energy usage tracker</h2><div class="sub">Station demand against the daily operating budget</div></div><span class="pill info">NO DATA</span></div>
-    <div class="metric" id="energyUsed">—<small> kWh today</small></div>
-    <div class="bar" style="margin:10px 0"><i id="energyBar" style="width:0%"></i></div>
-    <div class="sub" id="energyTrend">Awaiting utilities source.</div>
+    <div class="metric" id="energyUsed" data-dataset="utilities" data-dataset-path="utilities.energy.usedKwh">—<small> kWh today</small></div>
+    <div class="bar" style="margin:10px 0"><i id="energyBar" style="width:0%" data-dataset-path="utilities.energy.usedKwh"></i></div>
+    <div class="sub" id="energyTrend" data-dataset-path="utilities.energy.trend">Awaiting utilities source.</div>
   </div>
 
   <div class="panel simple-state">
     <div class="phead"><div><h2>Next shipment</h2><div class="sub">Upcoming station logistics movement</div></div><span class="pill info">NO DATA</span></div>
-    <div class="row" id="shipmentStatus"><span class="pill">SCHEDULED</span><div class="txt"><b>Shipment details unavailable</b><span>Connect the logistics feed to show the next vessel or airlift arrival.</span></div></div>
+    <div class="row" id="shipmentStatus" data-dataset="utilities" data-dataset-item="shipment"><span class="pill">SCHEDULED</span><div class="txt"><b>Shipment details unavailable</b><span>Connect the logistics feed to show the next vessel or airlift arrival.</span></div></div>
   </div>
 
   <div class="panel simple-state">
@@ -375,7 +375,7 @@
   <div class="grid g-1-2" style="margin-bottom:16px">
     <div class="panel">
       <div class="phead"><div><h2>Timeline-Based Support Tracker</h2><div class="sub">Select a phase to view indicators</div></div></div>
-      <div class="timeline" id="timeline"></div>
+      <div class="timeline" id="timeline" data-dataset="data-transfer" data-dataset-collection="phases"></div>
     </div>
 
     <div class="panel">
@@ -421,7 +421,7 @@
   </div>
 
   <div class="panel simple-state">
-    <div class="phead"><div><h2>Upload data</h2><div class="sub" id="transferQueueSummary">Choose a file to add to the transfer queue</div></div><span class="pill info">LOCAL QUEUE</span></div>
+    <div class="phead"><div><h2>Upload data</h2><div class="sub" id="transferQueueSummary" data-dataset="data-transfer" data-dataset-path="data-transfer.queue">Choose a file to add to the transfer queue</div></div><span class="pill info">LOCAL QUEUE</span></div>
     <label class="drop" for="dataUpload"><b>Select data file</b><br /><span class="sub">Files are queued in this browser.</span></label>
     <input id="dataUpload" type="file" hidden />
     <div class="row" id="uploadStatus"><span class="pill">WAITING</span><div class="txt"><b>No file queued</b><span>Choose a file to prepare it for transfer.</span></div></div>
@@ -445,7 +445,7 @@
       </div>
       <table>
         <thead><tr><th>Site</th><th>Access</th><th class="mono">Meltwater</th><th class="mono">Delay</th><th>Route</th></tr></thead>
-        <tbody id="siteRows"></tbody>
+        <tbody id="siteRows" data-dataset="alerts" data-dataset-collection="sites"></tbody>
       </table>
     </div>
 
@@ -454,7 +454,7 @@
         <div><h2>Historic Preservation Integrity Logs</h2><div class="sub">Timber huts &amp; legacy installations</div></div>
         <span class="pill bad" id="heritagePill">1 structural alert</span>
       </div>
-      <div class="grid" id="heritageCards"></div>
+      <div class="grid" id="heritageCards" data-dataset="alerts" data-dataset-collection="heritage"></div>
     </div>
   </div>
 
