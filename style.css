@@ -84,7 +84,7 @@ button,input,select,textarea{font:inherit;color:inherit}
 .google-login:hover{background:#fff;border-color:rgba(43,111,142,.42);box-shadow:0 12px 26px rgba(47,104,126,.2);transform:translateY(-2px)}
 .google-login:active{transform:translateY(0);box-shadow:0 5px 12px rgba(47,104,126,.14)}
 .google-login:focus-visible{outline:3px solid var(--aurora-dim);outline-offset:3px}
-.google-mark{display:grid;place-items:center;width:25px;height:25px;border-radius:8px;background:#fff;border:1px solid rgba(43,111,142,.16);font:800 1rem Arial,sans-serif;color:#4285f4;box-shadow:0 2px 6px rgba(47,104,126,.12)}
+.google-mark{display:block;width:25px;height:25px;padding:3px;border-radius:8px;background:#fff;border:1px solid rgba(43,111,142,.16);box-shadow:0 2px 6px rgba(47,104,126,.12)}
 .google-label{font-weight:700;letter-spacing:.01em}
 .google-arrow{margin-left:auto;color:var(--signal);font-size:1.1rem;line-height:1;transition:transform .18s ease}
 .google-login:hover .google-arrow{transform:translate(2px,-2px)}

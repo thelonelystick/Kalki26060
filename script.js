@@ -170,6 +170,7 @@ loginForm?.addEventListener("submit", async (event) => {
       });
       const assignedRole = roleResponse.ok ? ((await roleResponse.json()).role || user.role || "visitor") : (user.role || "visitor");
       role = ["visitor", "researcher", "admin"].includes(assignedRole) ? assignedRole : "visitor";
+      if (role !== signInMethod) throw new Error(`This account is assigned ${role} access.`);
     }
     setLoginMessage(`Welcome, ${user.name || user.username || user.email}.`, "success");
     setUserSession(role, user.token || "");

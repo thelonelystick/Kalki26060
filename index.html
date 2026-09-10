@@ -59,10 +59,11 @@
 
     <form id="loginForm" class="login-form">
       <div class="field">
-        <label for="loginRole">Sign-in method</label>
+        <label for="loginRole">Access type</label>
         <select id="loginRole" name="role">
-          <option value="account">Account access</option>
-          <option value="admin">Administrator access</option>
+          <option value="visitor">Visitor</option>
+          <option value="researcher">Researcher</option>
+          <option value="admin">Administrator</option>
         </select>
       </div>
       <div class="field">
@@ -78,7 +79,7 @@
 
     <div class="login-divider"><span>or</span></div>
     <button class="btn ghost google-login" id="googleLoginButton" type="button">
-      <span class="google-mark" aria-hidden="true">G</span>
+      <img class="google-mark" src="assets/google-logo.svg" alt="" aria-hidden="true" />
       <span class="google-label">Continue with Google</span>
       <span class="google-arrow" aria-hidden="true">↗</span>
     </button>
