@@ -78,4 +78,14 @@ The login screen supports two access types:
 
 Set `POLARIS_ADMIN_USERNAME` and `POLARIS_ADMIN_PASSWORD` in the ignored local `.env` file before starting the backend. The local administrator username is `admin`; never commit or document the password. Administrator updates are stored under `POLARIS_DATA_DIR` (default `backend/data`) and are loaded again after a browser refresh. The generated JSON store is ignored by Git. For production deployment, point this persistence layer at a durable database or volume; serverless temporary files are not durable.
 
+For the deployed Vercel login, add these environment variables in **Vercel -> Project Settings -> Environment Variables** and redeploy:
+
+```text
+POLARIS_ADMIN_USERNAME=admin
+POLARIS_ADMIN_PASSWORD=<your-admin-password>
+POLARIS_ADMIN_API_KEY=<a-long-random-api-key>
+```
+
+The deployed account log currently uses serverless memory; use Supabase or another durable store before relying on production role assignments.
+
 After adding the `role` column, apply both Supabase migrations so researcher accounts default to `researcher` and administrator accounts can be marked `admin`.

@@ -11,6 +11,8 @@ function isAuthorized(request) {
     .split(",")
     .map(key => key.trim())
     .filter(Boolean);
+  const adminApiKey = process.env.POLARIS_ADMIN_API_KEY || "";
+  if (adminApiKey) configuredKeys.push(adminApiKey);
   if (!configuredKeys.length) return true;
   const header = request.headers?.["x-api-key"] || request.headers?.authorization || "";
   const suppliedKey = header.toLowerCase().startsWith("bearer ") ? header.slice(7).trim() : header.trim();

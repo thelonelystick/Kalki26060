@@ -125,9 +125,17 @@ async function validateAdminCredentials(username, password) {
     headers: { "content-type": "application/json" },
     body: JSON.stringify({ username, password })
   });
-  const payload = await response.json();
+  const payload = await readJsonResponse(response);
   if (!response.ok) throw new Error(payload.error || "Administrator login failed.");
   return payload;
+}
+
+async function readJsonResponse(response) {
+  const contentType = response.headers.get("content-type") || "";
+  if (!contentType.includes("application/json")) {
+    throw new Error(`The administrator API is unavailable (${response.status}). Deploy the /api/auth/admin function and configure its environment variables.`);
+  }
+  return response.json();
 }
 
 function getSupabaseClient() {
@@ -177,11 +185,11 @@ loginForm?.addEventListener("submit", async (event) => {
       role = user.role === "admin" ? "admin" : "visitor";
       if (role !== "admin") throw new Error("Administrator access was not granted.");
     } else {
-      const roleResponse = await fetch("/api/auth/account-role", {
+        const roleResponse = await fetch("/api/auth/account-role", {
         method: "POST", headers: { "content-type": "application/json" },
         body: JSON.stringify({ identifier: email, fallbackRole: user.role || "researcher" })
       });
-      const assignedRole = roleResponse.ok ? ((await roleResponse.json()).role || user.role || "visitor") : (user.role || "visitor");
+        const assignedRole = roleResponse.ok ? ((await readJsonResponse(roleResponse)).role || user.role || "visitor") : (user.role || "visitor");
       role = ["visitor", "researcher", "admin"].includes(assignedRole) ? assignedRole : "visitor";
       if (role !== signInMethod) throw new Error(`This account is assigned ${role} access.`);
     }
