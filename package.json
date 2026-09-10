@@ -1,8 +1,8 @@
 {
   "scripts": {
     "dev": "vite",
-    "dev:backend": "node backend/server.mjs",
-    "start": "node backend/server.mjs",
+    "dev:backend": "node --env-file-if-exists=.env backend/server.mjs",
+    "start": "node --env-file-if-exists=.env backend/server.mjs",
     "build": "vite build",
     "preview": "vite preview"
   },

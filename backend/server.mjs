@@ -154,7 +154,8 @@ const server = createServer(async (request, response) => {
       const payload = await requestBody(request);
       const identifier = String(payload.identifier || "").trim().toLowerCase();
       const roles = await readAccountRoles();
-      json(response, 200, { role: roles[identifier] || null });
+      const assignment = roles[identifier];
+      json(response, 200, { role: typeof assignment === "string" ? assignment : assignment?.role || null });
     } catch {
       json(response, 400, { error: "Invalid account role request" });
     }
@@ -162,7 +163,8 @@ const server = createServer(async (request, response) => {
   }
 
   const isMutation = request.method !== "GET";
-  if (isMutation ? !adminAuthorized(request) : !authorized(request)) {
+  const adminRoute = url.pathname === "/api/accounts";
+  if (isMutation || adminRoute ? !adminAuthorized(request) : !authorized(request)) {
     json(response, 401, { error: "API key required", hint: "Use x-api-key or Authorization: Bearer <key>." }, { "www-authenticate": "Bearer" });
     return;
   }
@@ -182,9 +184,20 @@ const server = createServer(async (request, response) => {
         return;
       }
       const roles = await readAccountRoles();
-      roles[identifier] = role;
+      roles[identifier] = { role, updatedAt: new Date().toISOString() };
       await writeAccountRoles(roles);
       json(response, 200, { identifier, role, persisted: true });
+      return;
+    }
+
+    if (url.pathname === "/api/accounts" && request.method === "GET") {
+      const roles = await readAccountRoles();
+      const accounts = Object.entries(roles).map(([identifier, value]) => ({
+        identifier,
+        role: typeof value === "string" ? value : value.role,
+        updatedAt: typeof value === "string" ? null : value.updatedAt
+      }));
+      json(response, 200, { accounts });
       return;
     }
 

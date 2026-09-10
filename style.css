@@ -286,6 +286,7 @@ body.logged-in #login-screen{display:none}
 }
 .login-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
 .login-brand{display:flex;align-items:center;gap:11px;font-weight:800;letter-spacing:-.02em}
+.login-logo{width:42px;height:42px;display:block;object-fit:contain}
 .login-brand .glyph{width:36px;height:36px;border-radius:11px;display:grid;place-items:center;background:linear-gradient(140deg,var(--aurora),var(--signal));color:#04121a;font-family:var(--mono);font-weight:700;box-shadow:0 0 18px rgba(79,224,192,.35)}
 .login-badge{font-family:var(--mono);font-size:.64rem;letter-spacing:.14em;text-transform:uppercase;color:var(--aurora);border:1px solid var(--line-strong);background:var(--aurora-dim);padding:6px 10px;border-radius:999px}
 .login-card h1{font-size:clamp(1.8rem,2vw,2.2rem);letter-spacing:-.04em;margin:10px 0 6px}
@@ -297,6 +298,11 @@ body.logged-in #login-screen{display:none}
 .login-status{min-height:22px;margin-top:10px;font-size:.78rem;color:var(--text-dim)}
 .login-status.error{color:#b42318;background:#fff0ee;border:1px solid #f2a7a0;border-radius:8px;padding:9px 10px;font-weight:700}
 .login-status.success{color:#075e45;background:#e5fff5;border:1px solid #83d9bd;border-radius:8px;padding:9px 10px;font-weight:700}
+.admin-user-log{margin-top:18px;border-top:1px solid var(--line);padding-top:14px}
+.admin-user-log .phead{margin-bottom:10px}
+.admin-user-log h3{font-size:.95rem}
+.account-log-row{align-items:center}
+.account-role-button{margin-left:auto}
 
 /* ==========================================================================
    5. MODULE 1 — ORBIT SKY TRACKER (radar-style polar plot)

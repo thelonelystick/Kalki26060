@@ -187,6 +187,7 @@ loginForm?.addEventListener("submit", async (event) => {
     }
     setLoginMessage(`Welcome, ${user.name || user.username || user.email}.`, "success");
     setUserSession(role, user.token || "");
+    if (role === "admin") loadAccountLog().catch(error => setAdminMessage(error.message, "error"));
     toast("Login successful", "Redirecting to the operations console.");
     setTimeout(() => {
       document.body.classList.add("logged-in");
@@ -419,6 +420,24 @@ function setAdminMessage(message, kind = "success") {
   adminStatus.className = `login-status ${kind}`;
 }
 
+function renderAccountLog(accounts = []) {
+  const log = $("#accountLog");
+  if (!log) return;
+  if (!accounts.length) {
+    log.innerHTML = '<div class="row"><span class="pill">EMPTY</span><div class="txt"><b>No account assignments</b><span>Assign access to an email or username above.</span></div></div>';
+    return;
+  }
+  log.innerHTML = accounts.map(account => `<div class="row account-log-row"><span class="pill ${account.role === "admin" ? "bad" : account.role === "researcher" ? "info" : "ok"}">${account.role.toUpperCase()}</span><div class="txt"><b>${account.identifier}</b><span>${account.updatedAt ? `Updated ${new Date(account.updatedAt).toLocaleString()}` : "Legacy assignment"}</span></div><button class="btn ghost sm account-role-button" type="button" data-account="${account.identifier}">Change</button></div>`).join("");
+}
+
+async function loadAccountLog() {
+  if (currentSession.role !== "admin" || !currentSession.token) return;
+  const response = await fetch("/api/accounts", { headers: { Authorization: `Bearer ${currentSession.token}` } });
+  const payload = await response.json();
+  if (!response.ok) throw new Error(payload.error || "Unable to load account log.");
+  renderAccountLog(payload.accounts);
+}
+
 $("#accountRoleForm")?.addEventListener("submit", async event => {
   event.preventDefault();
   const form = new FormData(event.currentTarget);
@@ -432,7 +451,17 @@ $("#accountRoleForm")?.addEventListener("submit", async event => {
     if (!response.ok) throw new Error(payload.error || "Account access update failed.");
     setAdminMessage(`${payload.identifier} now has ${payload.role} access.`);
     event.currentTarget.reset();
+    await loadAccountLog();
   } catch (error) { setAdminMessage(error.message, "error"); }
+});
+
+$("#refreshAccounts")?.addEventListener("click", () => loadAccountLog().catch(error => setAdminMessage(error.message, "error")));
+
+$("#accountLog")?.addEventListener("click", event => {
+  const button = event.target.closest(".account-role-button");
+  if (!button) return;
+  $("#accountIdentifier").value = button.dataset.account;
+  $("#accountIdentifier").focus();
 });
 
 $("#datasetEditForm")?.addEventListener("submit", async event => {
