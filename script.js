@@ -28,6 +28,7 @@ let supabaseClient;
 const $ = (s, r=document) => r.querySelector(s);
 const $$ = (s, r=document) => [...r.querySelectorAll(s)];
 const pad = n => String(n).padStart(2, "0");
+const domPath = (module, path) => `data-dataset-path="${module}.${path}"`;
 const MODEL_URL = new URL(
   ((typeof window !== "undefined" && window.__ENV__?.MODEL_URL) || "assets/landscape.glb"),
   document.baseURI
@@ -208,17 +209,22 @@ function renderStorm(storm) {
 function renderTimeline(phases) {
   const timeline = $("#timeline");
   if (!timeline) return;
-  timeline.innerHTML = phases.map((phase, index) => `<button class="step ${index === 0 ? "active" : ""}" data-phase-index="${index}" type="button"><b>${phase.month}</b>${phase.label}</button>`).join("");
+  timeline.innerHTML = phases.map((phase, index) => `<button class="step ${index === 0 ? "active" : ""}" data-phase-index="${index}" data-dataset-item="data-transfer.phases.${index}" type="button"><b ${domPath("data-transfer", `phases.${index}.month`)}>${phase.month}</b><span ${domPath("data-transfer", `phases.${index}.label`)}>${phase.label}</span></button>`).join("");
   const renderPhase = index => {
     const phase = phases[index];
     setText("phaseTitle", `${phase.month} · ${phase.label}`);
     setText("phaseSub", phase.phase);
     setText("phasePill", phase.status);
     setText("phaseDesc", phase.description);
+    ["phaseTitle", "phaseSub", "phasePill", "phaseDesc"].forEach((id, fieldIndex) => {
+      const field = ["month", "phase", "status", "description"][fieldIndex];
+      const element = $(`#${id}`);
+      if (element) element.setAttribute("data-dataset-path", `data-transfer.phases.${index}.${field}`);
+    });
     const gauges = $("#phaseGauges");
     const actions = $("#phaseActions");
-    if (gauges) gauges.innerHTML = phase.gauges.map(gauge => `<div class="gauge-row"><span>${gauge.label}</span><b>${gauge.value}%</b><i><em style="width:${gauge.value}%"></em></i></div>`).join("");
-    if (actions) actions.innerHTML = phase.actions.map(action => `<div class="row"><span class="pill info">ACTION</span><div class="txt"><b>${action}</b><span>Suggested local support action.</span></div></div>`).join("");
+    if (gauges) gauges.innerHTML = phase.gauges.map((gauge, gaugeIndex) => `<div class="gauge-row" data-dataset-item="data-transfer.phases.${index}.gauges.${gaugeIndex}"><span ${domPath("data-transfer", `phases.${index}.gauges.${gaugeIndex}.label`)}>${gauge.label}</span><b ${domPath("data-transfer", `phases.${index}.gauges.${gaugeIndex}.value`)}>${gauge.value}%</b><i><em style="width:${gauge.value}%" ${domPath("data-transfer", `phases.${index}.gauges.${gaugeIndex}.value`)}></em></i></div>`).join("");
+    if (actions) actions.innerHTML = phase.actions.map((action, actionIndex) => `<div class="row" data-dataset-item="data-transfer.phases.${index}.actions.${actionIndex}"><span class="pill info">ACTION</span><div class="txt"><b ${domPath("data-transfer", `phases.${index}.actions.${actionIndex}`)}>${action}</b><span>Suggested local support action.</span></div></div>`).join("");
   };
   $$("#timeline .step").forEach(step => step.addEventListener("click", () => {
     $$("#timeline .step").forEach(item => item.classList.remove("active"));
@@ -231,8 +237,8 @@ function renderTimeline(phases) {
 function renderAlerts(data) {
   const siteRows = $("#siteRows");
   const heritageCards = $("#heritageCards");
-  if (siteRows) siteRows.innerHTML = data.sites.map(site => `<tr><td>${site.name}</td><td><span class="pill ${site.access === "OPEN" ? "ok" : "warn"}">${site.access}</span></td><td class="mono">${site.meltwater}</td><td class="mono">${site.delay}</td><td>${site.route}</td></tr>`).join("");
-  if (heritageCards) heritageCards.innerHTML = data.heritage.map(item => `<div class="row"><span class="pill ${item.kind}">${item.status}</span><div class="txt"><b>${item.name}</b><span>${item.detail}</span></div></div>`).join("");
+  if (siteRows) siteRows.innerHTML = data.sites.map((site, index) => `<tr data-dataset-item="alerts.sites.${index}"><td ${domPath("alerts", `sites.${index}.name`)}>${site.name}</td><td><span class="pill ${site.access === "OPEN" ? "ok" : "warn"}" ${domPath("alerts", `sites.${index}.access`)}>${site.access}</span></td><td class="mono" ${domPath("alerts", `sites.${index}.meltwater`)}>${site.meltwater}</td><td class="mono" ${domPath("alerts", `sites.${index}.delay`)}>${site.delay}</td><td ${domPath("alerts", `sites.${index}.route`)}>${site.route}</td></tr>`).join("");
+  if (heritageCards) heritageCards.innerHTML = data.heritage.map((item, index) => `<div class="row" data-dataset-item="alerts.heritage.${index}"><span class="pill ${item.kind}" ${domPath("alerts", `heritage.${index}.status`)}>${item.status}</span><div class="txt"><b ${domPath("alerts", `heritage.${index}.name`)}>${item.name}</b><span ${domPath("alerts", `heritage.${index}.detail`)}>${item.detail}</span></div></div>`).join("");
   const restricted = data.sites.filter(site => site.access !== "OPEN").length;
   const structural = data.heritage.filter(item => item.kind === "bad").length;
   setText("sitePill", `${restricted} sites restricted`);
@@ -242,21 +248,26 @@ function renderAlerts(data) {
 function renderInfrastructure(data) {
   const list = $("#deviceList");
   if (!list) return;
-  list.innerHTML = data.devices.map(device => `<div class="row"><span class="pill ${device.status === "TRUSTED" ? "ok" : "warn"}">${device.status}</span><div class="txt"><b>${device.name}</b><span>${device.type} · last seen ${device.lastSeen}</span></div></div>`).join("");
+  list.innerHTML = data.devices.map((device, index) => `<div class="row" data-dataset-item="infrastructure.devices.${index}"><span class="pill ${device.status === "TRUSTED" ? "ok" : "warn"}" ${domPath("infrastructure", `devices.${index}.status`)}>${device.status}</span><div class="txt"><b ${domPath("infrastructure", `devices.${index}.name`)}>${device.name}</b><span><span ${domPath("infrastructure", `devices.${index}.type`)}>${device.type}</span> · last seen <span ${domPath("infrastructure", `devices.${index}.lastSeen`)}>${device.lastSeen}</span></span></div></div>`).join("");
 }
 
 function renderUtilities(data) {
   const energyPercent = Math.round((data.energy.usedKwh / data.energy.budgetKwh) * 100);
   setText("energyUsed", data.energy.usedKwh);
+  $("#energyUsed")?.setAttribute("data-dataset-path", "utilities.energy.usedKwh");
   setText("energyTrend", `${data.energy.trend} · budget ${data.energy.budgetKwh.toLocaleString()} kWh`);
+  $("#energyTrend")?.setAttribute("data-dataset-path", "utilities.energy.trend");
   const energyBar = $("#energyBar");
-  if (energyBar) energyBar.style.width = `${Math.min(energyPercent, 100)}%`;
+  if (energyBar) {
+    energyBar.style.width = `${Math.min(energyPercent, 100)}%`;
+    energyBar.setAttribute("data-dataset-path", "utilities.energy.usedKwh");
+  }
   const shipment = data.shipment;
   const shipmentStatus = $("#shipmentStatus");
-  if (shipmentStatus) shipmentStatus.innerHTML = `<span class="pill ok">${shipment.status}</span><div class="txt"><b>${shipment.name} · ${shipment.mode}</b><span>ETA ${shipment.eta} · ${shipment.cargo}</span></div>`;
+  if (shipmentStatus) shipmentStatus.innerHTML = `<span class="pill ok" ${domPath("utilities", "shipment.status")}>${shipment.status}</span><div class="txt"><b><span ${domPath("utilities", "shipment.name")}>${shipment.name}</span> · <span ${domPath("utilities", "shipment.mode")}>${shipment.mode}</span></b><span>ETA <span ${domPath("utilities", "shipment.eta")}>${shipment.eta}</span> · <span ${domPath("utilities", "shipment.cargo")}>${shipment.cargo}</span></span></div>`;
   const bioList = $("#bioList");
   if (!bioList) return;
-  bioList.innerHTML = data.biosecurity.map((item, index) => `<label class="row check ${item.complete ? "done" : ""}"><input type="checkbox" data-bio-index="${index}" ${item.complete ? "checked" : ""}/><div class="txt"><b>${item.label}</b><span>${item.complete ? "Cleared" : "Action required"}</span></div></label>`).join("");
+  bioList.innerHTML = data.biosecurity.map((item, index) => `<label class="row check ${item.complete ? "done" : ""}" data-dataset-item="utilities.biosecurity.${index}"><input type="checkbox" data-bio-index="${index}" ${item.complete ? "checked" : ""} ${domPath("utilities", `biosecurity.${index}.complete`)}/><div class="txt"><b ${domPath("utilities", `biosecurity.${index}.label`)}>${item.label}</b><span>${item.complete ? "Cleared" : "Action required"}</span></div></label>`).join("");
   const updateBioScore = () => {
     const complete = $$("#bioList input").filter(input => input.checked).length;
     const score = Math.round((complete / data.biosecurity.length) * 100);
@@ -273,6 +284,7 @@ function renderUtilities(data) {
 
 function renderTransfer(data) {
   setText("transferQueueSummary", `${data.queue.queuedFiles} files · ${data.queue.queuedGb} GB queued · next window ${data.queue.nextWindow} · ${data.queue.protocol}`);
+  $("#transferQueueSummary")?.setAttribute("data-dataset-path", "data-transfer.queue");
   renderTimeline(data.phases);
 }
 
