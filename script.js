@@ -102,7 +102,14 @@ googleLoginButton?.addEventListener("click", async () => {
     });
     if (error) throw error;
   } catch (error) {
-    setLoginMessage(error.message || "Google sign-in failed.", "error");
+    const message = error.message || "Google sign-in failed.";
+    const providerDisabled = /unsupported provider|provider is not enabled/i.test(message);
+    setLoginMessage(
+      providerDisabled
+        ? "Google sign-in is not enabled yet. Enable Google under Supabase Authentication > Providers, then try again."
+        : message,
+      "error"
+    );
   }
 });
 

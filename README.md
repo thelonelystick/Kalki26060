@@ -8,6 +8,8 @@ https://kalki26060.vercel.app/
 
 Google login uses Supabase Auth and opens the existing researcher console. In Supabase, enable the Google provider under **Authentication -> Providers -> Google**, then add these redirect URLs under **Authentication -> URL Configuration**:
 
+If the app reports `Unsupported provider: provider is not enabled`, the Google provider is still disabled in Supabase. Turn on the provider, enter the Google OAuth client ID and client secret, save it, and retry the button.
+
 ```text
 http://localhost:5173/
 https://kalki26060.vercel.app/
