@@ -95,7 +95,10 @@ async function restoreSession() {
 googleLoginButton?.addEventListener("click", async () => {
   try {
     setLoginMessage("Opening Google sign-in…");
-    const redirectTo = import.meta.env.VITE_SUPABASE_REDIRECT_URL || window.location.origin;
+    const configuredRedirect = import.meta.env.VITE_SUPABASE_REDIRECT_URL;
+    const redirectTo = configuredRedirect && new URL(configuredRedirect, window.location.origin).origin === window.location.origin
+      ? new URL(configuredRedirect, window.location.origin).href
+      : `${window.location.origin}/`;
     const { error } = await getSupabaseClient().auth.signInWithOAuth({
       provider: "google",
       options: { redirectTo }
@@ -104,9 +107,12 @@ googleLoginButton?.addEventListener("click", async () => {
   } catch (error) {
     const message = error.message || "Google sign-in failed.";
     const providerDisabled = /unsupported provider|provider is not enabled/i.test(message);
+    const redirectMismatch = /redirect_uri_mismatch/i.test(message);
     setLoginMessage(
       providerDisabled
         ? "Google sign-in is not enabled yet. Enable Google under Supabase Authentication > Providers, then try again."
+        : redirectMismatch
+          ? "Google redirect settings do not match this site. Add the Supabase callback URL from the setup guide in Google Cloud."
         : message,
       "error"
     );

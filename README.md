@@ -15,6 +15,14 @@ http://localhost:5173/
 https://kalki26060.vercel.app/
 ```
 
+In Google Cloud, add this authorized redirect URI to the OAuth web client. Google must redirect to Supabase's callback, not directly to the Vercel site:
+
+```text
+https://alymfzfgpqcvbcptwafg.supabase.co/auth/v1/callback
+```
+
+Set the Supabase **Site URL** to `https://kalki26060.vercel.app/` and keep both app URLs above in Supabase's **Redirect URLs** list. For local development, also add `http://localhost:5173/` there.
+
 Set `VITE_SUPABASE_REDIRECT_URL` for a different deployment URL. The Google OAuth client secret belongs only in Supabase or a server-side secret store; never put it in `.env`, browser code, or Git. Because the OAuth credentials shown in the supplied screenshot are exposed, rotate that client secret in Google Cloud before using it.
 
 Use this client ID in Supabase's Google provider configuration:
