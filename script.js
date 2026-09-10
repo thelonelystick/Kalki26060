@@ -157,17 +157,17 @@ function setText(id, value) {
 
 function renderStationData(data) {
   const station = data.station;
-  setText("vDrs", station.drs);
-  setText("vHf", station.hf);
-  setText("vKp", station.kp);
-  setText("vTemp", `${station.temperature}°C`);
-  setText("vWind", `${station.wind} kt`);
-  setText("vVis", `${station.visibility} km`);
-  setText("vPbl", `${station.pbl} m`);
-  setText("vDay", station.winterOverDay);
-  setText("kOrbits", station.orbits);
-  setText("kData", station.dataCapturedTb.toFixed(1));
-  setText("kLink", station.linkAvailability);
+  const stationFields = {
+    vDrs: [station.drs, "drs"], vHf: [station.hf, "hf"], vKp: [station.kp, "kp"],
+    vTemp: [`${station.temperature}°C`, "temperature"], vWind: [`${station.wind} kt`, "wind"],
+    vVis: [`${station.visibility} km`, "visibility"], vPbl: [`${station.pbl} m`, "pbl"],
+    vDay: [station.winterOverDay, "winterOverDay"], kOrbits: [station.orbits, "orbits"],
+    kData: [station.dataCapturedTb.toFixed(1), "dataCapturedTb"], kLink: [station.linkAvailability, "linkAvailability"]
+  };
+  Object.entries(stationFields).forEach(([id, [value, path]]) => {
+    setText(id, value);
+    $(`#${id}`)?.setAttribute("data-dataset-path", `polaris.station.${path}`);
+  });
   const linkBar = $("#kLinkBar");
   if (linkBar) linkBar.style.width = `${station.linkAvailability}%`;
   setText("trackPill", `${data.passes.length} WINDOWS`);
@@ -189,7 +189,7 @@ function renderPasses(passes) {
     const radius = 90 * (1 - pass.elevation / 90);
     const x = 100 + radius * Math.sin(angle);
     const y = 100 - radius * Math.cos(angle);
-    return `<circle class="sat" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" fill="${pass.color}" data-pass-id="${pass.id}"/>`;
+    return `<circle class="sat" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" fill="${pass.color}" data-pass-id="${pass.id}" data-dataset-path="polaris.passes.${passes.indexOf(pass)}"/>`;
   }).join("");
   $$("#passList .passcard").forEach(card => card.addEventListener("click", () => {
     $$("#passList .passcard").forEach(item => item.classList.remove("sel"));
@@ -200,10 +200,11 @@ function renderPasses(passes) {
 
 function renderStorm(storm) {
   setText("stormPill", storm.level);
+  $("#stormPill")?.setAttribute("data-dataset-path", "polaris.storm.level");
   const bars = $("#kpBars");
   const alerts = $("#stormAlerts");
-  if (bars) bars.innerHTML = storm.forecast.map(level => `<div data-lvl="${level >= 6 ? "high" : level >= 4 ? "mid" : "low"}" style="height:${Math.max(14, level * 14)}%" title="Kp ${level}"></div>`).join("");
-  if (alerts) alerts.innerHTML = storm.alerts.map(alert => `<div class="row"><span class="pill ${alert.severity === "WARN" ? "warn" : "info"}">${alert.severity}</span><div class="txt"><b>${alert.title}</b><span>${alert.detail}</span></div></div>`).join("");
+  if (bars) bars.innerHTML = storm.forecast.map((level, index) => `<div data-lvl="${level >= 6 ? "high" : level >= 4 ? "mid" : "low"}" data-dataset-item="polaris.storm.forecast.${index}" data-dataset-path="polaris.storm.forecast.${index}" style="height:${Math.max(14, level * 14)}%" title="Kp ${level}"></div>`).join("");
+  if (alerts) alerts.innerHTML = storm.alerts.map((alert, index) => `<div class="row" data-dataset-item="polaris.storm.alerts.${index}"><span class="pill ${alert.severity === "WARN" ? "warn" : "info"}" ${domPath("polaris", `storm.alerts.${index}.severity`)}>${alert.severity}</span><div class="txt"><b ${domPath("polaris", `storm.alerts.${index}.title`)}>${alert.title}</b><span ${domPath("polaris", `storm.alerts.${index}.detail`)}>${alert.detail}</span></div></div>`).join("");
 }
 
 function renderTimeline(phases) {
@@ -304,7 +305,8 @@ async function loadBackendDatasets() {
   };
   await Promise.all(Object.keys(sources).map(async moduleName => {
     try {
-      const response = await fetch(`/api/datasets/${moduleName}`);
+      const apiModuleName = moduleName === "transfer" ? "data-transfer" : moduleName;
+      const response = await fetch(`/api/datasets/${apiModuleName}`);
       if (!response.ok) return;
       const payload = await response.json();
       if (payload.data) sources[moduleName] = payload.data;

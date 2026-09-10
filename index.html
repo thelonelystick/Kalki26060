@@ -102,17 +102,17 @@
 <!-- ==========================================================================
     MODULE 1 — VIEW TWIN MODEL
      ========================================================================== -->
-<section class="module active" id="m1" role="tabpanel">
+<section class="module active" id="m1" role="tabpanel" data-dataset="polaris">
   <div class="statusstrip">
     <div class="wrap">
-      <div class="sitem"><i class="dot" id="stDrs"></i>DRS <b id="vDrs">NO DATA</b></div>
-      <div class="sitem"><i class="dot warn" id="stHf"></i>HF/TTC <b id="vHf">NO DATA</b></div>
-      <div class="sitem">Kp <b id="vKp">—</b></div>
-      <div class="sitem">Temp <b id="vTemp">—</b></div>
-      <div class="sitem">Wind <b id="vWind">—</b></div>
-      <div class="sitem">Vis <b id="vVis">—</b></div>
-      <div class="sitem">PBL <b id="vPbl">—</b></div>
-      <div class="sitem">Winter-over day <b id="vDay">—</b></div>
+      <div class="sitem"><i class="dot" id="stDrs"></i>DRS <b id="vDrs" data-dataset-path="polaris.station.drs">NO DATA</b></div>
+      <div class="sitem"><i class="dot warn" id="stHf"></i>HF/TTC <b id="vHf" data-dataset-path="polaris.station.hf">NO DATA</b></div>
+      <div class="sitem">Kp <b id="vKp" data-dataset-path="polaris.station.kp">—</b></div>
+      <div class="sitem">Temp <b id="vTemp" data-dataset-path="polaris.station.temperature">—</b></div>
+      <div class="sitem">Wind <b id="vWind" data-dataset-path="polaris.station.wind">—</b></div>
+      <div class="sitem">Vis <b id="vVis" data-dataset-path="polaris.station.visibility">—</b></div>
+      <div class="sitem">PBL <b id="vPbl" data-dataset-path="polaris.station.pbl">—</b></div>
+      <div class="sitem">Winter-over day <b id="vDay" data-dataset-path="polaris.station.winterOverDay">—</b></div>
     </div>
   </div>
   <div class="modhead">
@@ -209,7 +209,7 @@
         <div><h2>Capture window queue</h2><div class="sub">Click a pass to schedule / release the DRS chain</div></div>
         <button class="btn sm primary" id="autoSched">Auto-schedule best 6</button>
       </div>
-      <div class="list" id="passList"></div>
+      <div class="list" id="passList" data-dataset="polaris" data-dataset-collection="passes"></div>
     </div>
   </div>
 
@@ -220,9 +220,9 @@
         <div><h2>Magnetic Storm Communication Alerts</h2><div class="sub">Planetary K-index, 3-hourly · HF absorption forecast</div></div>
         <span class="pill bad" id="stormPill">NO DATA</span>
       </div>
-      <div class="kindex" id="kpBars"></div>
+      <div class="kindex" id="kpBars" data-dataset="polaris" data-dataset-collection="storm.forecast"></div>
       <div class="axis"><span>-24 h</span><span>-12 h</span><span>now</span><span>+12 h</span><span>+24 h</span></div>
-      <div class="list" style="margin-top:14px" id="stormAlerts"></div>
+      <div class="list" style="margin-top:14px" id="stormAlerts" data-dataset="polaris" data-dataset-collection="storm.alerts"></div>
     </div>
 
     <!-- Maintenance -->
