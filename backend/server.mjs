@@ -16,6 +16,9 @@ const adminPassword = process.env.POLARIS_ADMIN_PASSWORD || "";
 const adminApiKey = process.env.POLARIS_ADMIN_API_KEY || "";
 const adminTokens = new Set();
 const accountRolesFile = "account-roles.json";
+const supabaseUrl = process.env.SUPABASE_URL || "";
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY || "";
+const useSupabase = Boolean(supabaseUrl && supabaseServiceKey);
 
 const datasetFiles = {
   polaris: "polaris-dataset.json",
@@ -43,8 +46,39 @@ function adminAuthorized(request) {
   return (adminApiKey && token === adminApiKey) || adminTokens.has(token);
 }
 
+async function supabaseRequest(path, options = {}) {
+  const response = await fetch(`${supabaseUrl}/rest/v1/${path}`, {
+    ...options,
+    headers: {
+      apikey: supabaseServiceKey,
+      Authorization: `Bearer ${supabaseServiceKey}`,
+      "content-type": "application/json",
+      ...(options.headers || {})
+    }
+  });
+  if (!response.ok) throw new Error(`Supabase request failed: ${response.status} ${await response.text()}`);
+  return response.status === 204 ? null : response.json();
+}
+
+async function supabaseRpc(name, body) {
+  const response = await fetch(`${supabaseUrl}/rest/v1/rpc/${name}`, {
+    method: "POST",
+    headers: { apikey: supabaseServiceKey, Authorization: `Bearer ${supabaseServiceKey}`, "content-type": "application/json" },
+    body: JSON.stringify(body)
+  });
+  if (!response.ok) throw new Error(`Supabase RPC failed: ${response.status} ${await response.text()}`);
+  return response.json();
+}
+
 async function readDataset(moduleName) {
   const filename = datasetFiles[moduleName];
+  if (useSupabase) {
+    const rows = await supabaseRequest(`datasets?module=eq.${encodeURIComponent(moduleName)}&select=data`);
+    if (rows[0]?.data) return rows[0].data;
+    const fixture = JSON.parse(await readFile(resolve(root, "assets", filename), "utf8"));
+    await supabaseRequest("datasets", { method: "POST", headers: { Prefer: "resolution=merge-duplicates" }, body: JSON.stringify({ module: moduleName, data: fixture }) });
+    return fixture;
+  }
   const storedPath = resolve(dataDir, filename);
   try {
     return JSON.parse(await readFile(storedPath, "utf8"));
@@ -58,11 +92,22 @@ async function readDataset(moduleName) {
 }
 
 async function writeDataset(moduleName, dataset) {
+  if (useSupabase) {
+    await supabaseRequest("datasets", { method: "POST", headers: { Prefer: "resolution=merge-duplicates" }, body: JSON.stringify({ module: moduleName, data: dataset, updated_by: "admin" }) });
+    return;
+  }
   await mkdir(dataDir, { recursive: true });
   await writeFile(resolve(dataDir, datasetFiles[moduleName]), JSON.stringify(dataset, null, 2) + "\n");
 }
 
 async function readAccountRoles() {
+  if (useSupabase) {
+    const rows = await supabaseRequest("login?select=email,username,role");
+    return Object.fromEntries(rows.flatMap(user => [
+      user.email ? [user.email.toLowerCase(), { role: user.role || "visitor", updatedAt: null }] : [],
+      user.username ? [user.username.toLowerCase(), { role: user.role || "visitor", updatedAt: null }] : []
+    ]));
+  }
   try {
     return JSON.parse(await readFile(resolve(dataDir, accountRolesFile), "utf8"));
   } catch (error) {
@@ -72,6 +117,11 @@ async function readAccountRoles() {
 }
 
 async function writeAccountRoles(roles) {
+  if (useSupabase) {
+    const [identifier, assignment] = Object.entries(roles).at(-1) || [];
+    if (identifier && assignment) await supabaseRpc("set_login_role", { user_identifier: identifier, user_role: assignment.role || assignment });
+    return;
+  }
   await mkdir(dataDir, { recursive: true });
   await writeFile(resolve(dataDir, accountRolesFile), JSON.stringify(roles, null, 2) + "\n");
 }
