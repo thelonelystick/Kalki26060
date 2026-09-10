@@ -4,6 +4,15 @@ Digital platform for efficient remote management of Indian Antarctic Research St
 
 https://kalki26060.vercel.app/
 
+## Local webservices
+
+The backend source lives in `backend/server.mjs` and exposes:
+
+- `GET /api/health`
+- `GET /api/datasets/{module}`
+
+Run the webservice with `npm run dev:backend` in one terminal and the frontend with `npm run dev` in another. Vite proxies `/api` requests to `http://localhost:8787`, so the browser uses the same paths locally and in deployment. `npm start` runs only the backend for production-style use.
+
 ## Dataset automation API
 
 Each dataset is available at `/api/datasets/{module}`:
