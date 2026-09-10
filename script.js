@@ -38,6 +38,7 @@ const DATASET_URL = new URL("assets/polaris-dataset.json", document.baseURI);
 const loginForm = $("#loginForm");
 const loginStatus = $("#loginStatus");
 const adminStatus = $("#adminStatus");
+const googleLoginButton = $("#googleLoginButton");
 let currentSession = { role: "researcher", token: "" };
 
 function toast(title, msg, kind="") {
@@ -67,12 +68,31 @@ function setUserSession(role = "researcher", token = "") {
 }
 
 async function restoreSession() {
+  const { data: { session } = {} } = await getSupabaseClient().auth.getSession().catch(() => ({ data: {} }));
+  if (session?.user) {
+    setUserSession("researcher");
+    return;
+  }
   if (localStorage.getItem("polaris-login-state") === "authenticated") {
     setUserSession(localStorage.getItem("polaris-user-role") || "researcher", localStorage.getItem("polaris-admin-token") || "");
     return;
   }
   document.body.classList.remove("logged-in");
 }
+
+googleLoginButton?.addEventListener("click", async () => {
+  try {
+    setLoginMessage("Opening Google sign-in…");
+    const redirectTo = import.meta.env.VITE_SUPABASE_REDIRECT_URL || window.location.origin;
+    const { error } = await getSupabaseClient().auth.signInWithOAuth({
+      provider: "google",
+      options: { redirectTo }
+    });
+    if (error) throw error;
+  } catch (error) {
+    setLoginMessage(error.message || "Google sign-in failed.", "error");
+  }
+});
 
 async function validateAdminCredentials(username, password) {
   const response = await fetch("/api/auth/admin", {
@@ -146,6 +166,7 @@ loginForm?.addEventListener("submit", async (event) => {
 });
 
 $("#logoutButton")?.addEventListener("click", () => {
+  getSupabaseClient().auth.signOut().catch(() => {});
   localStorage.removeItem("polaris-login-state");
   localStorage.removeItem("polaris-user-role");
   localStorage.removeItem("polaris-admin-token");

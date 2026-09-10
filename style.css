@@ -78,6 +78,11 @@ button,input,select,textarea{font:inherit;color:inherit}
 .mono{font-family:var(--mono)}
 .wrap{max-width:1320px;margin:0 auto;padding:0 22px}
 
+.login-divider{display:flex;align-items:center;gap:10px;margin:16px 0;color:var(--text-faint);font:500 .7rem var(--mono);text-transform:uppercase}
+.login-divider::before,.login-divider::after{content:"";height:1px;flex:1;background:var(--line)}
+.google-login{width:100%;justify-content:center}
+.google-login span{display:grid;place-items:center;width:20px;height:20px;border:1px solid currentColor;border-radius:50%;font-weight:800;font-family:Arial,sans-serif}
+
 .model-viewer{margin-bottom:16px}
 .model-stage{
   position:relative;height:420px;min-height:420px;overflow:hidden;border:1px solid var(--line);

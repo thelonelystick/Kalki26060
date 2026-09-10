@@ -4,6 +4,17 @@ Digital platform for efficient remote management of Indian Antarctic Research St
 
 https://kalki26060.vercel.app/
 
+## Google login
+
+Google login uses Supabase Auth and opens the existing researcher console. In Supabase, enable the Google provider under **Authentication -> Providers -> Google**, then add these redirect URLs under **Authentication -> URL Configuration**:
+
+```text
+http://localhost:5173/
+https://kalki26060.vercel.app/
+```
+
+Set `VITE_SUPABASE_REDIRECT_URL` for a different deployment URL. The Google OAuth client secret belongs only in Supabase or a server-side secret store; never put it in `.env`, browser code, or Git. Because the OAuth credentials shown in the supplied screenshot are exposed, rotate that client secret in Google Cloud before using it.
+
 ## Local webservices
 
 The backend source lives in `backend/server.mjs` and exposes:
