@@ -105,6 +105,7 @@
       <button class="tab" role="tab" data-mod="m3" aria-selected="false">Utilities</button>
       <button class="tab" role="tab" data-mod="m4" aria-selected="false">Data Transfer</button>
       <button class="tab" role="tab" data-mod="m5" aria-selected="false">Alerts</button>
+      <button class="tab admin-tab" role="tab" data-mod="admin" aria-selected="false" hidden>Admin</button>
     </nav>
 
     <button class="btn ghost sm" id="logoutButton" type="button">Log out</button>
@@ -114,7 +115,7 @@
 <!-- Station-wide status strip — values remain blank until a live feed is connected -->
 <main class="wrap">
 
-<section class="admin-tools panel" id="adminTools" hidden data-admin-only>
+<section class="module admin-tools panel" id="admin" role="tabpanel" hidden data-admin-only>
   <div class="phead"><div><h2>Administrator controls</h2><div class="sub">Changes are written to the connected dataset store.</div></div><span class="pill warn">ADMIN</span></div>
   <div class="grid g3">
     <form id="accountRoleForm" class="field">

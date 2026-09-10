@@ -63,18 +63,26 @@ function setUserSession(role = "visitor", token = "") {
   currentSession = { role, token };
   document.body.classList.add("logged-in");
   document.body.dataset.role = role;
-  $("#adminTools")?.toggleAttribute("hidden", role !== "admin");
   applyAccessRole(role);
   window.dispatchEvent(new Event("polaris:login-state"));
 }
 
 function applyAccessRole(role) {
   const visitor = role === "visitor";
+  const admin = role === "admin";
   $$("#modnav .tab").forEach(tab => {
-    const allowed = !visitor || tab.dataset.mod === "m1";
+    const allowed = tab.dataset.mod === "admin" ? admin : !visitor || tab.dataset.mod === "m1";
     tab.hidden = !allowed;
+    if (!allowed) tab.setAttribute("aria-selected", "false");
   });
-  $$(".module").forEach(module => module.classList.toggle("active", !visitor ? module.classList.contains("active") : module.id === "m1"));
+  const activeModule = admin && $("#admin")?.classList.contains("active") ? "admin" : visitor ? "m1" : ($$(".module.active")[0]?.id || "m1");
+  $$(".module").forEach(module => {
+    const isAdminModule = module.id === "admin";
+    module.hidden = isAdminModule && !admin;
+    module.classList.toggle("active", module.id === activeModule && (!isAdminModule || admin));
+  });
+  if (admin) $("#admin")?.removeAttribute("hidden");
+  else $("#admin")?.setAttribute("hidden", "");
   document.body.dataset.role = role;
 }
 
@@ -217,14 +225,18 @@ $("#logoutButton")?.addEventListener("click", () => {
   currentSession = { role: "visitor", token: "" };
   document.body.classList.remove("logged-in");
   delete document.body.dataset.role;
-  $("#adminTools")?.setAttribute("hidden", "");
+  $("#admin")?.setAttribute("hidden", "");
   toast("Signed out", "Your session has ended.");
 });
 
 /* Module navigation */
 $$("#modnav .tab").forEach(tab=>tab.addEventListener("click",()=>{
   $$("#modnav .tab").forEach(t=>t.setAttribute("aria-selected",String(t===tab)));
-  $$(".module").forEach(m=>m.classList.toggle("active",m.id===tab.dataset.mod));
+  $$(".module").forEach(module => {
+    const active = module.id === tab.dataset.mod;
+    module.classList.toggle("active", active);
+    if (module.id === "admin") module.toggleAttribute("hidden", !active || currentSession.role !== "admin");
+  });
   window.scrollTo({top:0,behavior:"smooth"});
 }));
 
