@@ -460,7 +460,8 @@ async function loadAccountLog() {
 
 $("#accountRoleForm")?.addEventListener("submit", async event => {
   event.preventDefault();
-  const form = new FormData(event.currentTarget);
+  const formElement = event.currentTarget;
+  const form = new FormData(formElement);
   try {
     const response = await fetch("/api/accounts", {
       method: "PATCH",
@@ -470,7 +471,7 @@ $("#accountRoleForm")?.addEventListener("submit", async event => {
     const payload = await response.json();
     if (!response.ok) throw new Error(payload.error || "Account access update failed.");
     setAdminMessage(`${payload.identifier} now has ${payload.role} access.`);
-    event.currentTarget.reset();
+    formElement.reset();
     await loadAccountLog();
   } catch (error) { setAdminMessage(error.message, "error"); }
 });
@@ -510,7 +511,8 @@ $("#policyForm")?.addEventListener("submit", async event => {
 
 $("#deviceForm")?.addEventListener("submit", async event => {
   event.preventDefault();
-  const form = new FormData(event.currentTarget);
+  const formElement = event.currentTarget;
+  const form = new FormData(formElement);
   try {
     const response = await fetch("/api/datasets/infrastructure");
     const payload = await response.json();
@@ -519,7 +521,7 @@ $("#deviceForm")?.addEventListener("submit", async event => {
       name: String(form.get("name")), type: String(form.get("type")), status: "PENDING", lastSeen: "Not yet connected"
     });
     setAdminMessage("IoT device added. Refreshing connected data.");
-    event.currentTarget.reset();
+    formElement.reset();
     await loadDataset();
   } catch (error) { setAdminMessage(error.message, "error"); }
 });
