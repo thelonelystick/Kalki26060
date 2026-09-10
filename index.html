@@ -59,6 +59,13 @@
 
     <form id="loginForm" class="login-form">
       <div class="field">
+        <label for="loginRole">Access type</label>
+        <select id="loginRole" name="role">
+          <option value="researcher">Researcher</option>
+          <option value="admin">Administrator</option>
+        </select>
+      </div>
+      <div class="field">
         <label for="loginEmail">Email or username</label>
         <input id="loginEmail" name="email" type="text" placeholder="Enter email or username" autocomplete="username" required />
       </div>
@@ -98,6 +105,31 @@
 
 <!-- Station-wide status strip — values remain blank until a live feed is connected -->
 <main class="wrap">
+
+<section class="admin-tools panel" id="adminTools" hidden data-admin-only>
+  <div class="phead"><div><h2>Administrator controls</h2><div class="sub">Changes are written to the connected dataset store.</div></div><span class="pill warn">ADMIN</span></div>
+  <div class="grid g3">
+    <form id="deviceForm" class="field">
+      <label for="adminDeviceName">Add IoT device</label>
+      <input id="adminDeviceName" name="name" placeholder="Device name" required />
+      <input id="adminDeviceType" name="type" placeholder="Device type" required />
+      <button class="btn primary sm" type="submit">Add device</button>
+    </form>
+    <form id="policyForm" class="field">
+      <label for="adminPolicyProtocol">Edit transfer policy</label>
+      <input id="adminPolicyProtocol" name="protocol" placeholder="Protocol" required />
+      <input id="adminPolicyWindow" name="nextWindow" placeholder="Next window" required />
+      <button class="btn primary sm" type="submit">Save policy</button>
+    </form>
+    <form id="datasetEditForm" class="field">
+      <label for="adminDatasetPath">Alter dataset field</label>
+      <input id="adminDatasetPath" name="path" placeholder="alerts.sites.0.access" required />
+      <input id="adminDatasetValue" name="value" placeholder="New value" required />
+      <button class="btn primary sm" type="submit">Update dataset</button>
+    </form>
+  </div>
+  <div id="adminStatus" class="login-status" aria-live="polite"></div>
+</section>
 
 <!-- ==========================================================================
     MODULE 1 — VIEW TWIN MODEL

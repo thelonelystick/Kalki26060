@@ -40,3 +40,14 @@ Authorization: Bearer <your-key>
 ```
 
 When no key is configured, the endpoint remains readable for the local fixture-based frontend. Never commit a real key to this repository or expose it in browser code.
+
+## Access roles and persistence
+
+The login screen supports two access types:
+
+- `Researcher`: the existing console experience with read-only dataset access.
+- `Administrator`: authenticates against the backend and can add IoT devices, edit transfer policy fields, and update any dataset field through the administrator controls.
+
+Set `POLARIS_ADMIN_USERNAME` and `POLARIS_ADMIN_PASSWORD` before starting the backend. Administrator updates are stored under `POLARIS_DATA_DIR` (default `backend/data`) and are loaded again after a browser refresh. The generated JSON store is ignored by Git. For production deployment, point this persistence layer at a durable database or volume; serverless temporary files are not durable.
+
+After adding the `role` column, apply both Supabase migrations so researcher accounts default to `researcher` and administrator accounts can be marked `admin`.

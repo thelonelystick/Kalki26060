@@ -37,6 +37,8 @@ const DATASET_URL = new URL("assets/polaris-dataset.json", document.baseURI);
 
 const loginForm = $("#loginForm");
 const loginStatus = $("#loginStatus");
+const adminStatus = $("#adminStatus");
+let currentSession = { role: "researcher", token: "" };
 
 function toast(title, msg, kind="") {
   const el=document.createElement("div"); el.className="toast "+kind;
@@ -53,18 +55,34 @@ function setLoginMessage(msg, kind="") {
   loginStatus.className = "login-status" + (kind ? ` ${kind}` : "");
 }
 
-function setUserSession() {
+function setUserSession(role = "researcher", token = "") {
   localStorage.setItem("polaris-login-state", "authenticated");
+  localStorage.setItem("polaris-user-role", role);
+  if (token) localStorage.setItem("polaris-admin-token", token);
+  currentSession = { role, token };
   document.body.classList.add("logged-in");
+  document.body.dataset.role = role;
+  $("#adminTools")?.toggleAttribute("hidden", role !== "admin");
   window.dispatchEvent(new Event("polaris:login-state"));
 }
 
 async function restoreSession() {
   if (localStorage.getItem("polaris-login-state") === "authenticated") {
-    setUserSession();
+    setUserSession(localStorage.getItem("polaris-user-role") || "researcher", localStorage.getItem("polaris-admin-token") || "");
     return;
   }
   document.body.classList.remove("logged-in");
+}
+
+async function validateAdminCredentials(username, password) {
+  const response = await fetch("/api/auth/admin", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ username, password })
+  });
+  const payload = await response.json();
+  if (!response.ok) throw new Error(payload.error || "Administrator login failed.");
+  return payload;
 }
 
 function getSupabaseClient() {
@@ -97,6 +115,7 @@ loginForm?.addEventListener("submit", async (event) => {
   event.preventDefault();
   const email = $("#loginEmail").value.trim();
   const password = $("#loginPassword").value;
+  const role = $("#loginRole").value;
 
   if (!email || !password) {
     setLoginMessage("Please enter both your email and password.", "error");
@@ -106,9 +125,13 @@ loginForm?.addEventListener("submit", async (event) => {
   setLoginMessage("Checking credentials…");
 
   try {
-    const user = await validateLoginCredentials(email, password);
+    const user = role === "admin"
+      ? await validateAdminCredentials(email, password)
+      : await validateLoginCredentials(email, password);
+    if (role === "admin" && user.role !== "admin") throw new Error("Administrator access was not granted.");
+    if (role === "researcher" && user.role === "admin") user.role = "researcher";
     setLoginMessage(`Welcome, ${user.name || user.username || user.email}.`, "success");
-    setUserSession();
+    setUserSession(role, user.token || "");
     toast("Login successful", "Redirecting to the operations console.");
     setTimeout(() => {
       document.body.classList.add("logged-in");
@@ -124,7 +147,12 @@ loginForm?.addEventListener("submit", async (event) => {
 
 $("#logoutButton")?.addEventListener("click", () => {
   localStorage.removeItem("polaris-login-state");
+  localStorage.removeItem("polaris-user-role");
+  localStorage.removeItem("polaris-admin-token");
+  currentSession = { role: "researcher", token: "" };
   document.body.classList.remove("logged-in");
+  delete document.body.dataset.role;
+  $("#adminTools")?.setAttribute("hidden", "");
   toast("Signed out", "Your session has ended.");
 });
 
@@ -316,6 +344,64 @@ async function loadBackendDatasets() {
   }));
   return sources;
 }
+
+async function adminRequest(moduleName, path, value) {
+  if (currentSession.role !== "admin" || !currentSession.token) throw new Error("Administrator session required.");
+  const response = await fetch(`/api/datasets/${moduleName}`, {
+    method: "PATCH",
+    headers: { "content-type": "application/json", Authorization: `Bearer ${currentSession.token}` },
+    body: JSON.stringify({ path, value })
+  });
+  const payload = await response.json();
+  if (!response.ok) throw new Error(payload.error || "Dataset update failed.");
+  return payload;
+}
+
+function setAdminMessage(message, kind = "success") {
+  if (!adminStatus) return;
+  adminStatus.textContent = message;
+  adminStatus.className = `login-status ${kind}`;
+}
+
+$("#datasetEditForm")?.addEventListener("submit", async event => {
+  event.preventDefault();
+  const form = new FormData(event.currentTarget);
+  const path = String(form.get("path")).trim();
+  const value = String(form.get("value"));
+  const [moduleName, ...pathParts] = path.split(".");
+  try {
+    await adminRequest(moduleName === "transfer" ? "data-transfer" : moduleName, pathParts.join("."), value);
+    setAdminMessage(`Saved ${path}. Refreshing connected data.`);
+    await loadDataset();
+  } catch (error) { setAdminMessage(error.message, "error"); }
+});
+
+$("#policyForm")?.addEventListener("submit", async event => {
+  event.preventDefault();
+  const form = new FormData(event.currentTarget);
+  try {
+    await adminRequest("data-transfer", "queue.protocol", String(form.get("protocol")));
+    await adminRequest("data-transfer", "queue.nextWindow", String(form.get("nextWindow")));
+    setAdminMessage("Transfer policy saved. Refreshing connected data.");
+    await loadDataset();
+  } catch (error) { setAdminMessage(error.message, "error"); }
+});
+
+$("#deviceForm")?.addEventListener("submit", async event => {
+  event.preventDefault();
+  const form = new FormData(event.currentTarget);
+  try {
+    const response = await fetch("/api/datasets/infrastructure");
+    const payload = await response.json();
+    const devices = payload.data.devices || [];
+    await adminRequest("infrastructure", `devices.${devices.length}`, {
+      name: String(form.get("name")), type: String(form.get("type")), status: "PENDING", lastSeen: "Not yet connected"
+    });
+    setAdminMessage("IoT device added. Refreshing connected data.");
+    event.currentTarget.reset();
+    await loadDataset();
+  } catch (error) { setAdminMessage(error.message, "error"); }
+});
 
 async function loadDataset() {
   try {
