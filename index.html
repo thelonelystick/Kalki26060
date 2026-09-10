@@ -59,10 +59,10 @@
 
     <form id="loginForm" class="login-form">
       <div class="field">
-        <label for="loginRole">Access type</label>
+        <label for="loginRole">Sign-in method</label>
         <select id="loginRole" name="role">
-          <option value="researcher">Researcher</option>
-          <option value="admin">Administrator</option>
+          <option value="account">Account access</option>
+          <option value="admin">Administrator access</option>
         </select>
       </div>
       <div class="field">
@@ -78,7 +78,9 @@
 
     <div class="login-divider"><span>or</span></div>
     <button class="btn ghost google-login" id="googleLoginButton" type="button">
-      <span aria-hidden="true">G</span> Continue with Google
+      <span class="google-mark" aria-hidden="true">G</span>
+      <span class="google-label">Continue with Google</span>
+      <span class="google-arrow" aria-hidden="true">↗</span>
     </button>
 
     <div id="loginStatus" class="login-status" aria-live="polite"></div>
@@ -114,6 +116,16 @@
 <section class="admin-tools panel" id="adminTools" hidden data-admin-only>
   <div class="phead"><div><h2>Administrator controls</h2><div class="sub">Changes are written to the connected dataset store.</div></div><span class="pill warn">ADMIN</span></div>
   <div class="grid g3">
+    <form id="accountRoleForm" class="field">
+      <label for="accountIdentifier">Set account access</label>
+      <input id="accountIdentifier" name="identifier" placeholder="Email or username" required />
+      <select id="accountRole" name="role">
+        <option value="visitor">Visitor</option>
+        <option value="researcher">Researcher</option>
+        <option value="admin">Administrator</option>
+      </select>
+      <button class="btn primary sm" type="submit">Save access</button>
+    </form>
     <form id="deviceForm" class="field">
       <label for="adminDeviceName">Add IoT device</label>
       <input id="adminDeviceName" name="name" placeholder="Device name" required />

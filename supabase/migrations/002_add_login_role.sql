@@ -5,7 +5,7 @@ alter table if exists public.login
   drop constraint if exists login_role_check;
 
 alter table if exists public.login
-  add constraint login_role_check check (role in ('researcher', 'admin'));
+  add constraint login_role_check check (role in ('visitor', 'researcher', 'admin'));
 
 drop function if exists public.verify_login(text, text);
 

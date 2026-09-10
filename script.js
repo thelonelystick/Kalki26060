@@ -39,7 +39,7 @@ const loginForm = $("#loginForm");
 const loginStatus = $("#loginStatus");
 const adminStatus = $("#adminStatus");
 const googleLoginButton = $("#googleLoginButton");
-let currentSession = { role: "researcher", token: "" };
+let currentSession = { role: "visitor", token: "" };
 
 function toast(title, msg, kind="") {
   const el=document.createElement("div"); el.className="toast "+kind;
@@ -56,7 +56,7 @@ function setLoginMessage(msg, kind="") {
   loginStatus.className = "login-status" + (kind ? ` ${kind}` : "");
 }
 
-function setUserSession(role = "researcher", token = "") {
+function setUserSession(role = "visitor", token = "") {
   localStorage.setItem("polaris-login-state", "authenticated");
   localStorage.setItem("polaris-user-role", role);
   if (token) localStorage.setItem("polaris-admin-token", token);
@@ -64,20 +64,32 @@ function setUserSession(role = "researcher", token = "") {
   document.body.classList.add("logged-in");
   document.body.dataset.role = role;
   $("#adminTools")?.toggleAttribute("hidden", role !== "admin");
+  applyAccessRole(role);
   window.dispatchEvent(new Event("polaris:login-state"));
+}
+
+function applyAccessRole(role) {
+  const visitor = role === "visitor";
+  $$("#modnav .tab").forEach(tab => {
+    const allowed = !visitor || tab.dataset.mod === "m1";
+    tab.hidden = !allowed;
+  });
+  $$(".module").forEach(module => module.classList.toggle("active", !visitor ? module.classList.contains("active") : module.id === "m1"));
+  document.body.dataset.role = role;
 }
 
 async function restoreSession() {
   const { data: { session } = {} } = await getSupabaseClient().auth.getSession().catch(() => ({ data: {} }));
   if (session?.user) {
-    setUserSession("researcher");
+    setUserSession("visitor");
     return;
   }
   if (localStorage.getItem("polaris-login-state") === "authenticated") {
-    setUserSession(localStorage.getItem("polaris-user-role") || "researcher", localStorage.getItem("polaris-admin-token") || "");
+    setUserSession(localStorage.getItem("polaris-user-role") || "visitor", localStorage.getItem("polaris-admin-token") || "");
     return;
   }
   document.body.classList.remove("logged-in");
+  delete document.body.dataset.role;
 }
 
 googleLoginButton?.addEventListener("click", async () => {
@@ -135,8 +147,7 @@ loginForm?.addEventListener("submit", async (event) => {
   event.preventDefault();
   const email = $("#loginEmail").value.trim();
   const password = $("#loginPassword").value;
-  const role = $("#loginRole").value;
-
+  const signInMethod = $("#loginRole").value;
   if (!email || !password) {
     setLoginMessage("Please enter both your email and password.", "error");
     return;
@@ -145,11 +156,21 @@ loginForm?.addEventListener("submit", async (event) => {
   setLoginMessage("Checking credentials…");
 
   try {
-    const user = role === "admin"
+    const user = signInMethod === "admin"
       ? await validateAdminCredentials(email, password)
       : await validateLoginCredentials(email, password);
-    if (role === "admin" && user.role !== "admin") throw new Error("Administrator access was not granted.");
-    if (role === "researcher" && user.role === "admin") user.role = "researcher";
+    let role = "visitor";
+    if (signInMethod === "admin") {
+      role = user.role === "admin" ? "admin" : "visitor";
+      if (role !== "admin") throw new Error("Administrator access was not granted.");
+    } else {
+      const roleResponse = await fetch("/api/auth/account-role", {
+        method: "POST", headers: { "content-type": "application/json" },
+        body: JSON.stringify({ identifier: email, fallbackRole: user.role || "researcher" })
+      });
+      const assignedRole = roleResponse.ok ? ((await roleResponse.json()).role || user.role || "visitor") : (user.role || "visitor");
+      role = ["visitor", "researcher", "admin"].includes(assignedRole) ? assignedRole : "visitor";
+    }
     setLoginMessage(`Welcome, ${user.name || user.username || user.email}.`, "success");
     setUserSession(role, user.token || "");
     toast("Login successful", "Redirecting to the operations console.");
@@ -170,7 +191,7 @@ $("#logoutButton")?.addEventListener("click", () => {
   localStorage.removeItem("polaris-login-state");
   localStorage.removeItem("polaris-user-role");
   localStorage.removeItem("polaris-admin-token");
-  currentSession = { role: "researcher", token: "" };
+  currentSession = { role: "visitor", token: "" };
   document.body.classList.remove("logged-in");
   delete document.body.dataset.role;
   $("#adminTools")?.setAttribute("hidden", "");
@@ -383,6 +404,22 @@ function setAdminMessage(message, kind = "success") {
   adminStatus.textContent = message;
   adminStatus.className = `login-status ${kind}`;
 }
+
+$("#accountRoleForm")?.addEventListener("submit", async event => {
+  event.preventDefault();
+  const form = new FormData(event.currentTarget);
+  try {
+    const response = await fetch("/api/accounts", {
+      method: "PATCH",
+      headers: { "content-type": "application/json", Authorization: `Bearer ${currentSession.token}` },
+      body: JSON.stringify({ identifier: form.get("identifier"), role: form.get("role") })
+    });
+    const payload = await response.json();
+    if (!response.ok) throw new Error(payload.error || "Account access update failed.");
+    setAdminMessage(`${payload.identifier} now has ${payload.role} access.`);
+    event.currentTarget.reset();
+  } catch (error) { setAdminMessage(error.message, "error"); }
+});
 
 $("#datasetEditForm")?.addEventListener("submit", async event => {
   event.preventDefault();

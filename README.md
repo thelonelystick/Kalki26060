@@ -15,6 +15,12 @@ https://kalki26060.vercel.app/
 
 Set `VITE_SUPABASE_REDIRECT_URL` for a different deployment URL. The Google OAuth client secret belongs only in Supabase or a server-side secret store; never put it in `.env`, browser code, or Git. Because the OAuth credentials shown in the supplied screenshot are exposed, rotate that client secret in Google Cloud before using it.
 
+Use this client ID in Supabase's Google provider configuration:
+
+```text
+621904618145-87s2cackunqb0tl35a4l87uiim2eufol.apps.googleusercontent.com
+```
+
 ## Local webservices
 
 The backend source lives in `backend/server.mjs` and exposes:
@@ -57,7 +63,8 @@ When no key is configured, the endpoint remains readable for the local fixture-b
 The login screen supports two access types:
 
 - `Researcher`: the existing console experience with read-only dataset access.
-- `Administrator`: authenticates against the backend and can add IoT devices, edit transfer policy fields, and update any dataset field through the administrator controls.
+- `Visitor`: the default Google/unknown-account access; read-only Twin Model and model viewing controls only.
+- `Administrator`: authenticates against the backend and can add IoT devices, edit transfer policy fields, update dataset fields, and assign account roles.
 
 Set `POLARIS_ADMIN_USERNAME` and `POLARIS_ADMIN_PASSWORD` before starting the backend. Administrator updates are stored under `POLARIS_DATA_DIR` (default `backend/data`) and are loaded again after a browser refresh. The generated JSON store is ignored by Git. For production deployment, point this persistence layer at a durable database or volume; serverless temporary files are not durable.
 

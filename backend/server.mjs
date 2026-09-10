@@ -15,6 +15,7 @@ const adminUsername = process.env.POLARIS_ADMIN_USERNAME || "admin";
 const adminPassword = process.env.POLARIS_ADMIN_PASSWORD || "";
 const adminApiKey = process.env.POLARIS_ADMIN_API_KEY || "";
 const adminTokens = new Set();
+const accountRolesFile = "account-roles.json";
 
 const datasetFiles = {
   polaris: "polaris-dataset.json",
@@ -59,6 +60,20 @@ async function readDataset(moduleName) {
 async function writeDataset(moduleName, dataset) {
   await mkdir(dataDir, { recursive: true });
   await writeFile(resolve(dataDir, datasetFiles[moduleName]), JSON.stringify(dataset, null, 2) + "\n");
+}
+
+async function readAccountRoles() {
+  try {
+    return JSON.parse(await readFile(resolve(dataDir, accountRolesFile), "utf8"));
+  } catch (error) {
+    if (error.code !== "ENOENT") throw error;
+    return {};
+  }
+}
+
+async function writeAccountRoles(roles) {
+  await mkdir(dataDir, { recursive: true });
+  await writeFile(resolve(dataDir, accountRolesFile), JSON.stringify(roles, null, 2) + "\n");
 }
 
 function setPath(target, path, value) {
@@ -134,6 +149,18 @@ const server = createServer(async (request, response) => {
     return;
   }
 
+  if (url.pathname === "/api/auth/account-role" && request.method === "POST") {
+    try {
+      const payload = await requestBody(request);
+      const identifier = String(payload.identifier || "").trim().toLowerCase();
+      const roles = await readAccountRoles();
+      json(response, 200, { role: roles[identifier] || null });
+    } catch {
+      json(response, 400, { error: "Invalid account role request" });
+    }
+    return;
+  }
+
   const isMutation = request.method !== "GET";
   if (isMutation ? !adminAuthorized(request) : !authorized(request)) {
     json(response, 401, { error: "API key required", hint: "Use x-api-key or Authorization: Bearer <key>." }, { "www-authenticate": "Bearer" });
@@ -143,6 +170,21 @@ const server = createServer(async (request, response) => {
   try {
     if (url.pathname === "/api/health") {
       json(response, 200, { ok: true, service: "polaris-ops-api", timestamp: new Date().toISOString() });
+      return;
+    }
+
+    if (url.pathname === "/api/accounts" && request.method === "PATCH") {
+      const payload = await requestBody(request);
+      const identifier = String(payload.identifier || "").trim().toLowerCase();
+      const role = String(payload.role || "");
+      if (!identifier || !["visitor", "researcher", "admin"].includes(role)) {
+        json(response, 400, { error: "Identifier and a valid role are required." });
+        return;
+      }
+      const roles = await readAccountRoles();
+      roles[identifier] = role;
+      await writeAccountRoles(roles);
+      json(response, 200, { identifier, role, persisted: true });
       return;
     }
 
