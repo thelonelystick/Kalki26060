@@ -17,6 +17,17 @@ export default function handler(request, response) {
     return;
   }
 
+  // Keep the boolean for existing consumers and publish the DOM binding contract
+  // so automation can locate a module, item, or individual dataset field.
   response.setHeader("Cache-Control", "s-maxage=60, stale-while-revalidate=300");
-  response.status(200).json({ module: moduleName, data: dataset });
+  response.status(200).json({
+    module: moduleName,
+    data: dataset,
+    dom: true,
+    domAttributes: {
+      module: "data-dataset",
+      item: "data-dataset-item",
+      path: "data-dataset-path"
+    }
+  });
 }
