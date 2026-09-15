@@ -52,7 +52,13 @@
         <img class="login-logo" src="assets/polaris-logo.svg" alt="Polaris Ops Antarctic station logo" />
         <div>Polaris Ops</div>
       </div>
-      <div class="login-badge">Secure</div>
+      <div class="login-actions">
+        <button class="theme-toggle login-theme-toggle" data-theme-toggle type="button" aria-label="Switch to dark mode" aria-pressed="false" title="Switch to dark mode">
+          <span class="theme-toggle-icon" aria-hidden="true">◐</span>
+          <span class="theme-toggle-label">Dark</span>
+        </button>
+        <div class="login-badge">Secure</div>
+      </div>
     </div>
     <h1>Sign in</h1>
     <p>Access the Antarctic operations console with your authorized Supabase account.</p>
@@ -109,7 +115,7 @@
     </nav>
 
     <div class="topbar-actions">
-      <button class="theme-toggle" id="themeToggle" type="button" aria-label="Switch to dark mode" aria-pressed="false" title="Switch to dark mode">
+      <button class="theme-toggle" id="themeToggle" data-theme-toggle type="button" aria-label="Switch to dark mode" aria-pressed="false" title="Switch to dark mode">
         <span class="theme-toggle-icon" aria-hidden="true">◐</span>
         <span class="theme-toggle-label">Dark</span>
       </button>
@@ -203,7 +209,7 @@
 
   <div class="panel model-viewer">
     <div class="phead">
-      <div><h2>Station Landscape Model</h2><div class="sub">Interactive terrain with an animated aurora field</div></div>
+      <div><h2>Station Landscape Model</h2><div class="sub">Interactive terrain inspection</div></div>
       <span class="pill info" id="modelPill">PREVIEW</span>
     </div>
     <div class="model-preview" id="modelPreview" aria-label="Station landscape preview">

@@ -35,20 +35,22 @@ const MODEL_URL = new URL(
 ).href;
 const DATASET_URL = new URL("assets/polaris-dataset.json", document.baseURI);
 
-const themeToggle = document.querySelector("#themeToggle");
+const themeToggles = $$('[data-theme-toggle]');
 function setTheme(theme) {
   const isDark = theme === "dark";
   document.documentElement.dataset.theme = isDark ? "dark" : "light";
-  themeToggle?.setAttribute("aria-pressed", String(isDark));
-  themeToggle?.setAttribute("aria-label", `Switch to ${isDark ? "light" : "dark"} mode`);
-  themeToggle?.setAttribute("title", `Switch to ${isDark ? "light" : "dark"} mode`);
-  const label = themeToggle?.querySelector(".theme-toggle-label");
-  if (label) label.textContent = isDark ? "Light" : "Dark";
+  themeToggles.forEach((toggle) => {
+    toggle.setAttribute("aria-pressed", String(isDark));
+    toggle.setAttribute("aria-label", `Switch to ${isDark ? "light" : "dark"} mode`);
+    toggle.setAttribute("title", `Switch to ${isDark ? "light" : "dark"} mode`);
+    const label = toggle.querySelector(".theme-toggle-label");
+    if (label) label.textContent = isDark ? "Light" : "Dark";
+  });
   localStorage.setItem("polaris-theme", isDark ? "dark" : "light");
   window.dispatchEvent(new CustomEvent("polaris:theme-change", { detail: { isDark } }));
 }
 setTheme(localStorage.getItem("polaris-theme") || (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"));
-themeToggle?.addEventListener("click", () => setTheme(document.documentElement.dataset.theme === "dark" ? "light" : "dark"));
+themeToggles.forEach((toggle) => toggle.addEventListener("click", () => setTheme(document.documentElement.dataset.theme === "dark" ? "light" : "dark")));
 
 const loginForm = $("#loginForm");
 const loginStatus = $("#loginStatus");
@@ -751,6 +753,80 @@ import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { DRACOLoader } from "three/addons/loaders/DRACOLoader.js";
 
+/* A separate ambient 3D object: it belongs to the interface, never the model. */
+function startAuroraInterface() {
+  const host = document.createElement("div");
+  host.id = "aurora-ui";
+  host.setAttribute("aria-hidden", "true");
+  document.body.prepend(host);
+
+  try {
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(42, 1, .1, 100);
+    camera.position.set(0, 0, 12);
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer.setPixelRatio(Math.min(devicePixelRatio, 1.5));
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    host.append(renderer.domElement);
+
+    const aurora = new THREE.Group();
+    aurora.position.set(4.6, 1.6, 0);
+    aurora.rotation.set(-.45, .18, -.3);
+    const materials = [];
+    for (let band = 0; band < 5; band += 1) {
+      const points = [];
+      for (let i = 0; i <= 32; i += 1) {
+        const angle = (i / 32) * Math.PI * 2;
+        const radius = 1.35 + Math.sin(angle * 3 + band * 1.3) * .18;
+        points.push(new THREE.Vector3(Math.cos(angle) * radius, Math.sin(angle) * (radius * .55), Math.sin(angle * 2 + band) * .28));
+      }
+      const geometry = new THREE.TubeGeometry(new THREE.CatmullRomCurve3(points, true), 64, .026 + band * .006, 7, true);
+      const material = new THREE.MeshBasicMaterial({ transparent: true, opacity: .28, depthWrite: false, blending: THREE.AdditiveBlending });
+      const mesh = new THREE.Mesh(geometry, material);
+      mesh.rotation.z = band * Math.PI / 5;
+      mesh.userData.phase = band * .85;
+      materials.push(material);
+      aurora.add(mesh);
+    }
+    scene.add(aurora);
+
+    const setAuroraPalette = ({ detail } = {}) => {
+      const isDark = detail?.isDark ?? document.documentElement.dataset.theme === "dark";
+      const palette = isDark ? ["#4fe0c0", "#6fb7ff", "#b48cff", "#4fe0c0", "#6fb7ff"] : ["#168a9b", "#247cc0", "#7560bd", "#168a9b", "#247cc0"];
+      materials.forEach((material, index) => {
+        material.color.set(palette[index]);
+        material.opacity = isDark ? .42 : .28;
+      });
+    };
+    setAuroraPalette();
+    window.addEventListener("polaris:theme-change", setAuroraPalette);
+
+    const resize = () => {
+      camera.aspect = innerWidth / innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(innerWidth, innerHeight, false);
+      aurora.position.set(innerWidth < 720 ? 2.4 : 4.6, innerWidth < 720 ? 2.7 : 1.6, 0);
+    };
+    window.addEventListener("resize", resize);
+    resize();
+    const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
+    function render() {
+      requestAnimationFrame(render);
+      if (!reducedMotion) {
+        const time = performance.now() * .00025;
+        aurora.rotation.y = time;
+        aurora.children.forEach((band) => { band.rotation.x = Math.sin(time * 2 + band.userData.phase) * .18; });
+      }
+      renderer.render(scene, camera);
+    }
+    render();
+  } catch (error) {
+    host.remove();
+    console.warn("Ambient aurora could not start", error);
+  }
+}
+startAuroraInterface();
+
 const modelStage = document.querySelector("#modelStage");
 const modelPreview = document.querySelector("#modelPreview");
 const modelStatus = document.querySelector("#modelStatus");
@@ -779,7 +855,7 @@ if (modelStage && modelPreview && modelStatus && modelPill && openModelButton) {
   let renderer;
   try {
   const scene = new THREE.Scene();
-  scene.background = new THREE.Color("#dceff5");
+  scene.background = new THREE.Color("#60728a");
   const camera = new THREE.PerspectiveCamera(42, 1, 0.1, 5000);
   camera.position.set(3, 2.4, 4.5);
 
@@ -807,48 +883,6 @@ if (modelStage && modelPreview && modelStatus && modelPill && openModelButton) {
   fillLight.position.set(-5, 3, -4);
   scene.add(fillLight);
 
-  let auroraField;
-  function createAuroraField(landscape) {
-    const bounds = new THREE.Box3().setFromObject(landscape);
-    const center = bounds.getCenter(new THREE.Vector3());
-    const size = bounds.getSize(new THREE.Vector3());
-    const span = Math.max(size.x, size.z) || 20;
-    const group = new THREE.Group();
-    group.name = "Animated aurora field";
-    const colors = ["#4fe0c0", "#6fb7ff", "#b48cff"];
-
-    for (let ribbon = 0; ribbon < 3; ribbon += 1) {
-      const segments = 42;
-      const positions = new Float32Array((segments + 1) * 2 * 3);
-      const indices = [];
-      const baseY = center.y + size.y * (1.2 + ribbon * .22) + span * .22;
-      for (let i = 0; i <= segments; i += 1) {
-        const t = i / segments;
-        const x = center.x + (t - .5) * span * 2.2;
-        const wave = Math.sin(t * Math.PI * 3 + ribbon * 1.7) * span * .08;
-        const y = baseY + wave;
-        const z = center.z - span * (.48 + ribbon * .08);
-        const top = (i * 2) * 3;
-        positions.set([x, y, z, x, y - span * (.16 + ribbon * .025), z], top);
-        if (i < segments) {
-          const point = i * 2;
-          indices.push(point, point + 1, point + 2, point + 1, point + 3, point + 2);
-        }
-      }
-      const geometry = new THREE.BufferGeometry();
-      geometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
-      geometry.setIndex(indices);
-      geometry.computeVertexNormals();
-      const material = new THREE.MeshBasicMaterial({ color: colors[ribbon], transparent: true, opacity: .24, side: THREE.DoubleSide, depthWrite: false, blending: THREE.AdditiveBlending });
-      const mesh = new THREE.Mesh(geometry, material);
-      mesh.userData.baseY = baseY;
-      mesh.userData.phase = ribbon * 1.7;
-      group.add(mesh);
-    }
-    scene.add(group);
-    return group;
-  }
-
   let model;
   let initialCamera;
   let animationFrame;
@@ -856,8 +890,7 @@ if (modelStage && modelPreview && modelStatus && modelPill && openModelButton) {
   let disposed = false;
   const applyViewerTheme = ({ detail } = {}) => {
     const isDark = detail?.isDark ?? document.documentElement.dataset.theme === "dark";
-    scene.background = new THREE.Color(isDark ? "#06111e" : "#dceff5");
-    auroraField?.children.forEach((ribbon) => { ribbon.material.opacity = isDark ? .32 : .19; });
+    scene.background = new THREE.Color(isDark ? "#26384f" : "#60728a");
   };
   window.addEventListener("polaris:theme-change", applyViewerTheme);
   applyViewerTheme();
@@ -877,7 +910,7 @@ if (modelStage && modelPreview && modelStatus && modelPill && openModelButton) {
     const largestDimension = Math.max(size.x, size.y, size.z) || 1;
     const distance = largestDimension * 1.7;
     controls.target.copy(center);
-    camera.position.set(center.x + distance, center.y + distance * 0.7, center.z + distance);
+    camera.position.set(center.x + distance * .65, center.y + distance * 1.2, center.z + distance * 1.25);
     camera.near = Math.max(largestDimension / 1000, 0.01);
     camera.far = Math.max(largestDimension * 100, 1000);
     camera.updateProjectionMatrix();
@@ -925,8 +958,6 @@ if (modelStage && modelPreview && modelStatus && modelPill && openModelButton) {
       if (disposed) return;
       model = gltf.scene;
       scene.add(model);
-      auroraField = createAuroraField(model);
-      applyViewerTheme();
       frameModel(model);
       resizeModel();
       modelStatus.remove();
@@ -1007,13 +1038,6 @@ if (modelStage && modelPreview && modelStatus && modelPill && openModelButton) {
 
   function renderModel() {
     animationFrame = requestAnimationFrame(renderModel);
-    if (auroraField) {
-      const elapsed = performance.now() * .00055;
-      auroraField.children.forEach((ribbon, index) => {
-        ribbon.position.y = Math.sin(elapsed + ribbon.userData.phase) * .07;
-        ribbon.rotation.z = Math.sin(elapsed * .75 + index) * .018;
-      });
-    }
     controls.update();
     renderer.render(scene, camera);
   }

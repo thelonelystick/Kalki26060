@@ -82,6 +82,9 @@ body{background:
   radial-gradient(900px 540px at 92% 4%, rgba(111,183,255,.17), transparent 60%),
   var(--ice-900);}
 :root[data-theme="dark"] body{background:radial-gradient(1100px 620px at 12% -8%,rgba(79,224,192,.10),transparent 62%),radial-gradient(900px 540px at 92% 4%,rgba(111,183,255,.11),transparent 60%),var(--ice-900)}
+#aurora-ui{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+#aurora-ui canvas{display:block;width:100%;height:100%;opacity:.72}
+#login-screen,#app-shell{position:relative;z-index:1}
 a{color:inherit;text-decoration:none}
 button,input,select,textarea{font:inherit;color:inherit}
 ::selection{background:rgba(79,224,192,.3)}
@@ -90,8 +93,8 @@ button,input,select,textarea{font:inherit;color:inherit}
 
 .login-divider{display:flex;align-items:center;gap:10px;margin:18px 0 12px;color:var(--text-faint);font:500 .66rem var(--mono);text-transform:uppercase}
 .login-divider::before,.login-divider::after{content:"";height:1px;flex:1;background:var(--line)}
-.google-login{width:100%;min-height:48px;display:flex;align-items:center;justify-content:center;gap:11px;background:rgba(255,255,255,.9);border-color:rgba(43,111,142,.22);color:#173b4c;box-shadow:0 8px 20px rgba(47,104,126,.12);transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease,background .18s ease}
-.google-login:hover{background:#fff;border-color:rgba(43,111,142,.42);box-shadow:0 12px 26px rgba(47,104,126,.2);transform:translateY(-2px)}
+.google-login{width:100%;min-height:48px;display:flex;align-items:center;justify-content:center;gap:11px;background:rgba(255,255,255,.9);border-color:rgba(43,111,142,.22);color:var(--text);box-shadow:0 8px 20px rgba(47,104,126,.12);transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease,background .18s ease}
+.google-login:hover{background:var(--ice-850);border-color:var(--line-strong);box-shadow:0 12px 26px rgba(47,104,126,.2);transform:translateY(-2px)}
 .google-login:active{transform:translateY(0);box-shadow:0 5px 12px rgba(47,104,126,.14)}
 .google-login:focus-visible{outline:3px solid var(--aurora-dim);outline-offset:3px}
 .google-mark{display:block;width:25px;height:25px;padding:3px;border-radius:8px;background:#fff;border:1px solid rgba(43,111,142,.16);box-shadow:0 2px 6px rgba(47,104,126,.12)}
@@ -225,9 +228,9 @@ main{padding:30px 0 90px}
 :root[data-theme="dark"] .passcard,:root[data-theme="dark"] .step,:root[data-theme="dark"] .mood button,:root[data-theme="dark"] .sitecard,:root[data-theme="dark"] .tnode .card{background:rgba(16,34,50,.72)}
 :root[data-theme="dark"] .statusstrip{background:linear-gradient(90deg,rgba(11,24,38,.94),rgba(8,17,29,.84))}
 :root[data-theme="dark"] footer{background:rgba(8,17,29,.7)}
-:root[data-theme="dark"] #login-screen{background:radial-gradient(circle at top,rgba(79,224,192,.16),transparent 35%),linear-gradient(180deg,#050b14,#08111d)}
+:root[data-theme="dark"] #login-screen{background:radial-gradient(circle at top,rgba(79,224,192,.12),transparent 35%),linear-gradient(180deg,rgba(5,11,20,.78),rgba(8,17,29,.88))}
 :root[data-theme="dark"] .login-card{background:linear-gradient(180deg,rgba(16,34,50,.96),rgba(8,24,38,.96))}
-:root[data-theme="dark"] .google-login{background:rgba(240,248,251,.94)}
+:root[data-theme="dark"] .google-login{background:rgba(16,34,50,.92);border-color:var(--line-strong)}
 :root[data-theme="dark"] .toast{background:#102232;color:var(--text);border-color:var(--line-strong)}
 .panel h2{font-size:.95rem;font-weight:700;letter-spacing:-.01em;display:flex;align-items:center;gap:9px}
 .panel h3{font-size:.82rem;font-weight:700;color:var(--text)}
@@ -303,14 +306,15 @@ body.logged-in #login-screen{display:none}
 #login-screen{
   min-height:100vh;display:grid;place-items:center;padding:24px;
   background:
-    radial-gradient(circle at top, rgba(79,224,192,.18), transparent 35%),
-    linear-gradient(180deg, rgba(234,247,252,1), rgba(245,251,254,1));
+    radial-gradient(circle at top, rgba(79,224,192,.16), transparent 35%),
+    linear-gradient(180deg, rgba(234,247,252,.82), rgba(245,251,254,.9));
 }
 .login-card{
   width:min(100%,420px);background:linear-gradient(180deg,rgba(255,255,255,.96),rgba(225,242,249,.94));
   border:1px solid var(--line);border-radius:22px;padding:30px 26px;box-shadow:var(--shadow);
 }
-.login-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+.login-top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px}
+.login-actions{display:flex;align-items:center;gap:8px}
 .login-brand{display:flex;align-items:center;gap:11px;font-weight:800;letter-spacing:-.02em}
 .login-logo{width:42px;height:42px;display:block;object-fit:contain}
 .login-brand .glyph{width:36px;height:36px;border-radius:11px;display:grid;place-items:center;background:linear-gradient(140deg,var(--aurora),var(--signal));color:#04121a;font-family:var(--mono);font-weight:700;box-shadow:0 0 18px rgba(79,224,192,.35)}
