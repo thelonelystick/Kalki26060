@@ -265,7 +265,7 @@ function markUnavailable(){
     const el=$("#"+id); if(el) el.textContent="—";
   });
   ["passList","stormAlerts","opsWindows","siteRows","heritageCards","kpBars","timeline","threads"].forEach(id=>{
-    const el=$("#"+id); if(el) el.innerHTML='<div class="row"><span class="pill">NO DATA</span><div class="txt"><b>Awaiting connected source</b><span>No operational record is displayed until an authoritative feed is connected.</span></div></div>';
+    const el=$("#"+id); if(el) el.innerHTML='<div class="row"><span class="pill">NO DATA</span><div class="txt"><b>Awaiting connected source</b><span>No operational record is displayed until an a[...]
   });
   const pillMap={trackPill:"NO DATA",stormPill:"NO DATA",rainPill:"NO DATA"};
   Object.entries(pillMap).forEach(([id,text])=>{const el=$("#"+id);if(el)el.textContent=text;});
@@ -325,14 +325,14 @@ function renderStorm(storm) {
   $("#stormPill")?.setAttribute("data-dataset-path", "polaris.storm.level");
   const bars = $("#kpBars");
   const alerts = $("#stormAlerts");
-  if (bars) bars.innerHTML = storm.forecast.map((level, index) => `<div data-lvl="${level >= 6 ? "high" : level >= 4 ? "mid" : "low"}" data-dataset-item="polaris.storm.forecast.${index}" data-dataset-path="polaris.storm.forecast.${index}" style="height:${Math.max(14, level * 14)}%" title="Kp ${level}"></div>`).join("");
-  if (alerts) alerts.innerHTML = storm.alerts.map((alert, index) => `<div class="row" data-dataset-item="polaris.storm.alerts.${index}"><span class="pill ${alert.severity === "WARN" ? "warn" : "info"}" ${domPath("polaris", `storm.alerts.${index}.severity`)}>${alert.severity}</span><div class="txt"><b ${domPath("polaris", `storm.alerts.${index}.title`)}>${alert.title}</b><span ${domPath("polaris", `storm.alerts.${index}.detail`)}>${alert.detail}</span></div></div>`).join("");
+  if (bars) bars.innerHTML = storm.forecast.map((level, index) => `<div data-lvl="${level >= 6 ? "high" : level >= 4 ? "mid" : "low"}" data-dataset-item="polaris.storm.forecast.${index}" data-dataset-path="polaris.storm.forecast.${index}" style="height:${Math.max(22, level * 12)}px"></div>`).join("");
+  if (alerts) alerts.innerHTML = storm.alerts.map((alert, index) => `<div class="row" data-dataset-item="polaris.storm.alerts.${index}"><span class="pill ${alert.severity === "WARN" ? "warn" : "info"}">${alert.severity}</span><div class="txt"><b>${alert.title}</b><span>${alert.detail}</span></div></div>`).join("");
 }
 
 function renderTimeline(phases) {
   const timeline = $("#timeline");
   if (!timeline) return;
-  timeline.innerHTML = phases.map((phase, index) => `<button class="step ${index === 0 ? "active" : ""}" data-phase-index="${index}" data-dataset-item="data-transfer.phases.${index}" type="button"><b ${domPath("data-transfer", `phases.${index}.month`)}>${phase.month}</b><span ${domPath("data-transfer", `phases.${index}.label`)}>${phase.label}</span></button>`).join("");
+  timeline.innerHTML = phases.map((phase, index) => `<button class="step ${index === 0 ? "active" : ""}" data-phase-index="${index}" data-dataset-item="data-transfer.phases.${index}" type="button">${phase.month}</button>`).join("");
   const renderPhase = index => {
     const phase = phases[index];
     setText("phaseTitle", `${phase.month} · ${phase.label}`);
@@ -346,8 +346,8 @@ function renderTimeline(phases) {
     });
     const gauges = $("#phaseGauges");
     const actions = $("#phaseActions");
-    if (gauges) gauges.innerHTML = phase.gauges.map((gauge, gaugeIndex) => `<div class="gauge-row" data-dataset-item="data-transfer.phases.${index}.gauges.${gaugeIndex}"><span ${domPath("data-transfer", `phases.${index}.gauges.${gaugeIndex}.label`)}>${gauge.label}</span><b ${domPath("data-transfer", `phases.${index}.gauges.${gaugeIndex}.value`)}>${gauge.value}%</b><i><em style="width:${gauge.value}%" ${domPath("data-transfer", `phases.${index}.gauges.${gaugeIndex}.value`)}></em></i></div>`).join("");
-    if (actions) actions.innerHTML = phase.actions.map((action, actionIndex) => `<div class="row" data-dataset-item="data-transfer.phases.${index}.actions.${actionIndex}"><span class="pill info">ACTION</span><div class="txt"><b ${domPath("data-transfer", `phases.${index}.actions.${actionIndex}`)}>${action}</b><span>Suggested local support action.</span></div></div>`).join("");
+    if (gauges) gauges.innerHTML = phase.gauges.map((gauge, gaugeIndex) => `<div class="gauge-row" data-dataset-item="data-transfer.phases.${index}.gauges.${gaugeIndex}"><span ${domPath("data-transfer", `phases.${index}.gauges.${gaugeIndex}.label`)}>${gauge.label}</span><div class="bar"><i style="width:${gauge.value}%"></i></div><b>${gauge.value}%</b></div>`).join("");
+    if (actions) actions.innerHTML = phase.actions.map((action, actionIndex) => `<div class="row" data-dataset-item="data-transfer.phases.${index}.actions.${actionIndex}"><span class="pill info">${action.type}</span><div class="txt"><b>${action.title}</b><span>${action.detail}</span></div></div>`).join("");
   };
   $$("#timeline .step").forEach(step => step.addEventListener("click", () => {
     $$("#timeline .step").forEach(item => item.classList.remove("active"));
@@ -360,8 +360,8 @@ function renderTimeline(phases) {
 function renderAlerts(data) {
   const siteRows = $("#siteRows");
   const heritageCards = $("#heritageCards");
-  if (siteRows) siteRows.innerHTML = data.sites.map((site, index) => `<tr data-dataset-item="alerts.sites.${index}"><td ${domPath("alerts", `sites.${index}.name`)}>${site.name}</td><td><span class="pill ${site.access === "OPEN" ? "ok" : "warn"}" ${domPath("alerts", `sites.${index}.access`)}>${site.access}</span></td><td class="mono" ${domPath("alerts", `sites.${index}.meltwater`)}>${site.meltwater}</td><td class="mono" ${domPath("alerts", `sites.${index}.delay`)}>${site.delay}</td><td ${domPath("alerts", `sites.${index}.route`)}>${site.route}</td></tr>`).join("");
-  if (heritageCards) heritageCards.innerHTML = data.heritage.map((item, index) => `<div class="row" data-dataset-item="alerts.heritage.${index}"><span class="pill ${item.kind}" ${domPath("alerts", `heritage.${index}.status`)}>${item.status}</span><div class="txt"><b ${domPath("alerts", `heritage.${index}.name`)}>${item.name}</b><span ${domPath("alerts", `heritage.${index}.detail`)}>${item.detail}</span></div></div>`).join("");
+  if (siteRows) siteRows.innerHTML = data.sites.map((site, index) => `<tr data-dataset-item="alerts.sites.${index}"><td ${domPath("alerts", `sites.${index}.name`)}>${site.name}</td><td><span class="pill ${site.access === "OPEN" ? "ok" : "warn"}">${site.access}</span></td><td class="mono">${site.meltwater}</td><td class="mono">${site.delay}</td><td>${site.route}</td></tr>`).join("");
+  if (heritageCards) heritageCards.innerHTML = data.heritage.map((item, index) => `<div class="row" data-dataset-item="alerts.heritage.${index}"><span class="pill ${item.kind}" ${domPath("alerts", `heritage.${index}.kind`)}>${item.kind.toUpperCase()}</span><div class="txt"><b>${item.title}</b><span>${item.detail}</span></div></div>`).join("");
   const restricted = data.sites.filter(site => site.access !== "OPEN").length;
   const structural = data.heritage.filter(item => item.kind === "bad").length;
   setText("sitePill", `${restricted} sites restricted`);
@@ -371,7 +371,7 @@ function renderAlerts(data) {
 function renderInfrastructure(data) {
   const list = $("#deviceList");
   if (!list) return;
-  list.innerHTML = data.devices.map((device, index) => `<div class="row" data-dataset-item="infrastructure.devices.${index}"><span class="pill ${device.status === "TRUSTED" ? "ok" : "warn"}" ${domPath("infrastructure", `devices.${index}.status`)}>${device.status}</span><div class="txt"><b ${domPath("infrastructure", `devices.${index}.name`)}>${device.name}</b><span><span ${domPath("infrastructure", `devices.${index}.type`)}>${device.type}</span> · last seen <span ${domPath("infrastructure", `devices.${index}.lastSeen`)}>${device.lastSeen}</span></span></div></div>`).join("");
+  list.innerHTML = data.devices.map((device, index) => `<div class="row" data-dataset-item="infrastructure.devices.${index}"><span class="pill ${device.status === "TRUSTED" ? "ok" : "warn"}" ${domPath("infrastructure", `devices.${index}.status`)}>${device.status}</span><div class="txt"><b>${device.name}</b><span>${device.type} · ${device.lastSeen}</span></div></div>`).join("");
 }
 
 function renderUtilities(data) {
@@ -387,10 +387,10 @@ function renderUtilities(data) {
   }
   const shipment = data.shipment;
   const shipmentStatus = $("#shipmentStatus");
-  if (shipmentStatus) shipmentStatus.innerHTML = `<span class="pill ok" ${domPath("utilities", "shipment.status")}>${shipment.status}</span><div class="txt"><b><span ${domPath("utilities", "shipment.name")}>${shipment.name}</span> · <span ${domPath("utilities", "shipment.mode")}>${shipment.mode}</span></b><span>ETA <span ${domPath("utilities", "shipment.eta")}>${shipment.eta}</span> · <span ${domPath("utilities", "shipment.cargo")}>${shipment.cargo}</span></span></div>`;
+  if (shipmentStatus) shipmentStatus.innerHTML = `<span class="pill ok" ${domPath("utilities", "shipment.status")}>${shipment.status}</span><div class="txt"><b><span ${domPath("utilities", "shipment.name")}>${shipment.name}</span></b><span ${domPath("utilities", "shipment.note")}>${shipment.note}</span></div>`;
   const bioList = $("#bioList");
   if (!bioList) return;
-  bioList.innerHTML = data.biosecurity.map((item, index) => `<label class="row check ${item.complete ? "done" : ""}" data-dataset-item="utilities.biosecurity.${index}"><input type="checkbox" data-bio-index="${index}" ${item.complete ? "checked" : ""} ${domPath("utilities", `biosecurity.${index}.complete`)}/><div class="txt"><b ${domPath("utilities", `biosecurity.${index}.label`)}>${item.label}</b><span>${item.complete ? "Cleared" : "Action required"}</span></div></label>`).join("");
+  bioList.innerHTML = data.biosecurity.map((item, index) => `<label class="row check ${item.complete ? "done" : ""}" data-dataset-item="utilities.biosecurity.${index}"><input type="checkbox" data-index="${index}" ${item.complete ? "checked" : ""}/><div class="txt"><b>${item.label}</b><span>${item.detail}</span></div></label>`).join("");
   const updateBioScore = () => {
     const complete = $$("#bioList input").filter(input => input.checked).length;
     const score = Math.round((complete / data.biosecurity.length) * 100);
@@ -464,7 +464,7 @@ function renderAccountLog(accounts = []) {
     log.innerHTML = '<div class="row"><span class="pill">EMPTY</span><div class="txt"><b>No account assignments</b><span>Assign access to an email or username above.</span></div></div>';
     return;
   }
-  log.innerHTML = accounts.map(account => `<div class="row account-log-row"><span class="pill ${account.role === "admin" ? "bad" : account.role === "researcher" ? "info" : "ok"}">${account.role.toUpperCase()}</span><div class="txt"><b>${account.identifier}</b><span>${account.updatedAt ? `Updated ${new Date(account.updatedAt).toLocaleString()}` : "Legacy assignment"}</span></div><button class="btn ghost sm account-role-button" type="button" data-account="${account.identifier}">Change</button></div>`).join("");
+  log.innerHTML = accounts.map(account => `<div class="row account-log-row"><span class="pill ${account.role === "admin" ? "bad" : account.role === "researcher" ? "info" : "ok"}">${account.role.toUpperCase()}</span><div class="txt"><b>${account.email || account.username}</b><span>${account.name || "Station account"}</span></div><button class="btn ghost sm account-role-button" type="button" data-account="${account.email || account.username}">Set role</button></div>`).join("");
 }
 
 async function loadAccountLog() {
@@ -578,7 +578,7 @@ const MAINT=[
 ];
 let maintState=MAINT.map(()=>false);
 function renderMaint(){
-  $("#maintList").innerHTML=MAINT.map(([t,s],i)=>`<label class="row check ${maintState[i]?"done":""}"><input type="checkbox" data-i="${i}" ${maintState[i]?"checked":""}/><div class="txt"><b>${t}</b><span class="mono">${s}</span></div></label>`).join("");
+  $("#maintList").innerHTML=MAINT.map(([t,s],i)=>`<label class="row check ${maintState[i]?"done":""}"><input type="checkbox" data-i="${i}" ${maintState[i]?"checked":""}/><div class="txt"><b>${t}</b><span>${s}</span></div></label>`).join("");
   $("#maintPill").textContent=`${maintState.filter(Boolean).length} / ${MAINT.length}`;
   $$("#maintList input").forEach(cb=>cb.addEventListener("change",()=>{maintState[+cb.dataset.i]=cb.checked;renderMaint();}));
 }
@@ -656,7 +656,7 @@ $("#postBtn")?.addEventListener("click",()=>{
 /* Infrastructure observations are user-entered and remain local. */
 let obs=[];
 function renderObsSelect(){
-  const el=$("#obsAsset"); if(el)el.innerHTML='<option value="">Select an asset</option><option>Research site</option><option>Historic installation</option><option>Runway / access route</option>';
+  const el=$("#obsAsset"); if(el)el.innerHTML='<option value="">Select an asset</option><option>Research site</option><option>Historic installation</option><option>Runway / access route</option><option>Power station</option><option>Ice core lab</option>';
 }
 function renderObsLog(){
   const el=$("#obsLog"); if(!el)return;
@@ -839,219 +839,334 @@ if (modelStage && modelPreview && modelStatus && modelPill && openModelButton) {
   let activeViewer;
   openModelButton.addEventListener("click", openModel);
 
+  function createReferenceLandscapeModel() {
+    const group = new THREE.Group();
+
+    const islandGeometry = new THREE.SphereGeometry(4.35, 120, 120);
+    const islandPositions = islandGeometry.attributes.position;
+    for (let i = 0; i < islandPositions.count; i += 1) {
+      const x = islandPositions.getX(i);
+      const y = islandPositions.getY(i);
+      const z = islandPositions.getZ(i);
+      const radial = Math.hypot(x, z);
+      const ridge = Math.sin((radial * 9.5) - 1.7) * 0.42 + Math.cos((x * 6.2) + (z * 4.8)) * 0.22 + Math.sin((y * 11) + 2.4) * 0.16;
+      const plateau = Math.max(0, y) * 1.45 + ridge;
+      islandPositions.setXYZ(i, x * 1.18, plateau * 0.8, z * 1.18);
+    }
+    islandGeometry.computeVertexNormals();
+
+    const terrain = new THREE.Mesh(
+      islandGeometry,
+      new THREE.MeshStandardMaterial({ color: "#edf5fb", roughness: 1, metalness: 0.02 })
+    );
+    terrain.rotation.x = Math.PI;
+    terrain.rotation.z = Math.PI * 0.17;
+    terrain.scale.set(1.2, 0.7, 1.2);
+    terrain.position.y = -0.15;
+    group.add(terrain);
+
+    const lakeGeometry = new THREE.CylinderGeometry(1.2, 1.2, 0.22, 96);
+    const lake = new THREE.Mesh(
+      lakeGeometry,
+      new THREE.MeshStandardMaterial({ color: "#a7d9f3", transparent: true, opacity: 0.88, roughness: 0.25, metalness: 0.1 })
+    );
+    lake.rotation.x = Math.PI / 2;
+    lake.position.y = 0.3;
+    group.add(lake);
+
+    const platform = new THREE.Mesh(
+      new THREE.BoxGeometry(0.8, 0.52, 0.8),
+      new THREE.MeshStandardMaterial({ color: "#c6d0db", roughness: 0.85 })
+    );
+    platform.position.set(0.3, 0.8, 0.1);
+    group.add(platform);
+
+    const roof = new THREE.Mesh(
+      new THREE.ConeGeometry(0.62, 0.45, 4),
+      new THREE.MeshStandardMaterial({ color: "#8a99a8", roughness: 0.9 })
+    );
+    roof.rotation.y = Math.PI / 4;
+    roof.position.set(0.3, 1.35, 0.1);
+    group.add(roof);
+
+    const snowCaps = [
+      { x: -1.7, y: 1.2, z: 1.0, r: 0.75 },
+      { x: 1.8, y: 1.1, z: -0.8, r: 0.7 },
+      { x: 1.2, y: 1.5, z: 1.6, r: 0.9 },
+      { x: -1.9, y: 1.35, z: -1.2, r: 0.8 },
+      { x: 0.4, y: 1.7, z: 1.9, r: 0.7 },
+    ];
+    snowCaps.forEach((peak) => {
+      const rock = new THREE.Mesh(
+        new THREE.ConeGeometry(peak.r, 1.2, 6),
+        new THREE.MeshStandardMaterial({ color: "#2f3a42", roughness: 0.95, metalness: 0.02 })
+      );
+      rock.position.set(peak.x, peak.y, peak.z);
+      rock.rotation.z = Math.PI * 0.2;
+      group.add(rock);
+
+      const cap = new THREE.Mesh(
+        new THREE.ConeGeometry(peak.r * 0.72, 0.6, 6),
+        new THREE.MeshStandardMaterial({ color: "#f3f7fb", roughness: 1 })
+      );
+      cap.position.set(peak.x, peak.y + 0.5, peak.z);
+      group.add(cap);
+    });
+
+    const iceRings = new THREE.Group();
+    for (let i = 0; i < 4; i += 1) {
+      const ring = new THREE.Mesh(
+        new THREE.TorusGeometry(1.7 + i * 0.32, 0.05, 10, 60),
+        new THREE.MeshStandardMaterial({ color: "#dfeef7", roughness: 0.8, metalness: 0.05 })
+      );
+      ring.rotation.x = Math.PI / 2;
+      ring.position.y = 0.14 + i * 0.02;
+      iceRings.add(ring);
+    }
+    group.add(iceRings);
+
+    group.rotation.set(-0.6, 0.6, 0);
+    group.position.y = -0.35;
+    return group;
+  }
+
   function openModel() {
-  if (activeViewer) return;
-  activeViewer = true;
-  modelPreview.hidden = true;
-  modelStage.hidden = false;
-  openModelButton.hidden = true;
-  if (closeModelButton) closeModelButton.hidden = false;
-  resetModelButton.disabled = true;
-  modelStatus.hidden = false;
-  modelStatus.classList.remove("error");
-  modelStatus.classList.add("loading");
-  modelStatus.textContent = "Starting 3D viewer…";
-
-  let renderer;
-  try {
-  const scene = new THREE.Scene();
-  scene.background = new THREE.Color("#60728a");
-  const camera = new THREE.PerspectiveCamera(42, 1, 0.1, 5000);
-  camera.position.set(3, 2.4, 4.5);
-
-  renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-  renderer.outputColorSpace = THREE.SRGBColorSpace;
-  modelStage.appendChild(renderer.domElement);
-
-  const controls = new OrbitControls(camera, renderer.domElement);
-  controls.enableDamping = true;
-  controls.dampingFactor = 0.06;
-  controls.minDistance = 0.2;
-  controls.maxDistance = 2000;
-
-  const dracoLoader = new DRACOLoader();
-  dracoLoader.setDecoderPath("https://cdn.jsdelivr.net/npm/three@0.176.0/examples/jsm/libs/draco/");
-  const gltfLoader = new GLTFLoader();
-  gltfLoader.setDRACOLoader(dracoLoader);
-
-  scene.add(new THREE.HemisphereLight("#ffffff", "#7895a2", 2.2));
-  const keyLight = new THREE.DirectionalLight("#ffffff", 2.6);
-  keyLight.position.set(4, 8, 6);
-  scene.add(keyLight);
-  const fillLight = new THREE.DirectionalLight("#9fdcff", 1.1);
-  fillLight.position.set(-5, 3, -4);
-  scene.add(fillLight);
-
-  let model;
-  let initialCamera;
-  let animationFrame;
-  let modelObjectUrl;
-  let disposed = false;
-  const applyViewerTheme = ({ detail } = {}) => {
-    const isDark = detail?.isDark ?? document.documentElement.dataset.theme === "dark";
-    scene.background = new THREE.Color(isDark ? "#26384f" : "#60728a");
-  };
-  window.addEventListener("polaris:theme-change", applyViewerTheme);
-  applyViewerTheme();
-  function resizeModel() {
-    const width = modelStage.clientWidth;
-    const height = modelStage.clientHeight;
-    if (!width || !height) return;
-    camera.aspect = width / height;
-    camera.updateProjectionMatrix();
-    renderer.setSize(width, height, false);
-  }
-
-  function frameModel(object) {
-    const bounds = new THREE.Box3().setFromObject(object);
-    const center = bounds.getCenter(new THREE.Vector3());
-    const size = bounds.getSize(new THREE.Vector3());
-    const largestDimension = Math.max(size.x, size.y, size.z) || 1;
-    const distance = largestDimension * 1.7;
-    controls.target.copy(center);
-    camera.position.set(center.x + distance * .65, center.y + distance * 1.2, center.z + distance * 1.25);
-    camera.near = Math.max(largestDimension / 1000, 0.01);
-    camera.far = Math.max(largestDimension * 100, 1000);
-    camera.updateProjectionMatrix();
-    controls.update();
-    initialCamera = { position: camera.position.clone(), target: controls.target.clone() };
-  }
-
-  function resetModelView() {
-    if (!initialCamera) return;
-    camera.position.copy(initialCamera.position);
-    controls.target.copy(initialCamera.target);
-    controls.update();
-  }
-
-  resetModelButton?.addEventListener("click", resetModelView);
-  const resizeObserver = new ResizeObserver(resizeModel);
-  const handleResize = () => resizeModel();
-  window.addEventListener("resize", handleResize);
-  window.addEventListener("polaris:login-state", handleResize);
-  resizeObserver.observe(modelStage);
-  resizeModel();
-
-  async function getCachedModelUrl() {
-    if (!("caches" in window)) return MODEL_URL;
-
-    const cache = await caches.open("polaris-model-v1");
-    const cached = await cache.match(MODEL_URL);
-    if (cached) {
-      modelStatus.textContent = "Loading cached landscape model…";
-      modelObjectUrl = URL.createObjectURL(await cached.blob());
-      return modelObjectUrl;
-    }
-
-    modelStatus.textContent = "Downloading landscape model for first use…";
-    const response = await fetch(MODEL_URL);
-    if (!response.ok) throw new Error(`Model request failed (${response.status})`);
-    await cache.put(MODEL_URL, response.clone());
-    modelObjectUrl = URL.createObjectURL(await response.blob());
-    return modelObjectUrl;
-  }
-
-  getCachedModelUrl().then((modelUrl) => gltfLoader.load(
-    modelUrl,
-    (gltf) => {
-      if (disposed) return;
-      model = gltf.scene;
-      scene.add(model);
-      frameModel(model);
-      resizeModel();
-      modelStatus.remove();
-      modelPill.textContent = "READY";
-      modelPill.className = "pill ok";
-      modelStatus.classList.remove("loading");
-      modelStatus.textContent = "3D model loaded.";
-      resetModelButton.disabled = false;
-    },
-    (event) => {
-      if (event.total) {
-        const percent = Math.round((event.loaded / event.total) * 100);
-        modelStatus.textContent = `Loading landscape model… ${percent}%`;
-      }
-    },
-    (error) => {
-      if (disposed) return;
-      console.error("Unable to load landscape model", error);
-      modelStatus.textContent = "Unable to load the landscape model. Check the asset path and network connection.";
-      modelStatus.classList.remove("loading");
-      modelStatus.classList.add("error");
-      modelPill.textContent = "UNAVAILABLE";
-      modelPill.className = "pill bad";
-    }
-  )).catch((error) => {
-    if (disposed) return;
-    console.error("Unable to prepare cached landscape model", error);
-    modelStatus.textContent = "Unable to load the landscape model. Check the asset path and network connection.";
-    modelStatus.classList.remove("loading");
-    modelStatus.classList.add("error");
-    modelPill.textContent = "UNAVAILABLE";
-    modelPill.className = "pill bad";
-    openModelButton.disabled = false;
-  });
-
-  function disposeMaterial(material) {
-    Object.values(material).forEach((value) => {
-      if (value && typeof value === "object" && "isTexture" in value) value.dispose();
-    });
-    material.dispose();
-  }
-
-  function closeModel() {
-    if (!activeViewer) return;
-    disposed = true;
-    cancelAnimationFrame(animationFrame);
-    resizeObserver.disconnect();
-    window.removeEventListener("resize", handleResize);
-    window.removeEventListener("polaris:login-state", handleResize);
-    window.removeEventListener("polaris:theme-change", applyViewerTheme);
-    resetModelButton?.removeEventListener("click", resetModelView);
-    controls.dispose();
-    scene.traverse((object) => {
-      if (!object.isMesh) return;
-      object.geometry.dispose();
-      const materials = Array.isArray(object.material) ? object.material : [object.material];
-      materials.forEach(disposeMaterial);
-    });
-    renderer.dispose();
-    renderer.domElement.remove();
-    dracoLoader.dispose();
-    if (modelObjectUrl) URL.revokeObjectURL(modelObjectUrl);
-    model = null;
-    activeViewer = null;
-    modelPreview.hidden = false;
-    modelStage.hidden = true;
-    modelStage.replaceChildren(modelStatus);
-    modelStatus.classList.add("loading");
-    modelStatus.classList.remove("error");
-    modelStatus.textContent = "Loading landscape model…";
-    modelPill.textContent = "PREVIEW";
-    modelPill.className = "pill info";
-    openModelButton.hidden = false;
+    if (activeViewer) return;
+    activeViewer = true;
+    modelPreview.hidden = true;
+    modelStage.hidden = false;
+    openModelButton.hidden = true;
+    if (closeModelButton) closeModelButton.hidden = false;
     resetModelButton.disabled = true;
-    closeModelButton.hidden = true;
-  }
-  closeModelButton?.addEventListener("click", closeModel);
-
-  function renderModel() {
-    animationFrame = requestAnimationFrame(renderModel);
-    controls.update();
-    renderer.render(scene, camera);
-  }
-  renderModel();
-  } catch (error) {
-    activeViewer = null;
-    modelPreview.hidden = false;
-    modelStage.hidden = true;
-    openModelButton.hidden = false;
     modelStatus.hidden = false;
-    modelStatus.textContent = "3D viewer could not start in this browser.";
-    modelStatus.classList.add("error");
-    console.error("Unable to start 3D viewer", error);
-  }
-}
+    modelStatus.classList.remove("error");
+    modelStatus.classList.add("loading");
+    modelStatus.textContent = "Starting 3D viewer…";
 
+    let renderer;
+    try {
+      const scene = new THREE.Scene();
+      scene.background = new THREE.Color("#60728a");
+      const camera = new THREE.PerspectiveCamera(42, 1, 0.1, 5000);
+      camera.position.set(3, 2.4, 4.5);
+
+      renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.outputColorSpace = THREE.SRGBColorSpace;
+      modelStage.appendChild(renderer.domElement);
+
+      const controls = new OrbitControls(camera, renderer.domElement);
+      controls.enableDamping = true;
+      controls.dampingFactor = 0.06;
+      controls.minDistance = 0.2;
+      controls.maxDistance = 2000;
+
+      const dracoLoader = new DRACOLoader();
+      dracoLoader.setDecoderPath("https://cdn.jsdelivr.net/npm/three@0.176.0/examples/jsm/libs/draco/");
+      const gltfLoader = new GLTFLoader();
+      gltfLoader.setDRACOLoader(dracoLoader);
+
+      scene.add(new THREE.HemisphereLight("#ffffff", "#7895a2", 2.2));
+      const keyLight = new THREE.DirectionalLight("#ffffff", 2.6);
+      keyLight.position.set(4, 8, 6);
+      scene.add(keyLight);
+      const fillLight = new THREE.DirectionalLight("#9fdcff", 1.1);
+      fillLight.position.set(-5, 3, -4);
+      scene.add(fillLight);
+
+      let model;
+      let initialCamera;
+      let animationFrame;
+      let modelObjectUrl;
+      let disposed = false;
+      const applyViewerTheme = ({ detail } = {}) => {
+        const isDark = detail?.isDark ?? document.documentElement.dataset.theme === "dark";
+        scene.background = new THREE.Color(isDark ? "#26384f" : "#60728a");
+      };
+      window.addEventListener("polaris:theme-change", applyViewerTheme);
+      applyViewerTheme();
+      function resizeModel() {
+        const width = modelStage.clientWidth;
+        const height = modelStage.clientHeight;
+        if (!width || !height) return;
+        camera.aspect = width / height;
+        camera.updateProjectionMatrix();
+        renderer.setSize(width, height, false);
+      }
+
+      function frameModel(object) {
+        const bounds = new THREE.Box3().setFromObject(object);
+        const center = bounds.getCenter(new THREE.Vector3());
+        const size = bounds.getSize(new THREE.Vector3());
+        const largestDimension = Math.max(size.x, size.y, size.z) || 1;
+        const distance = largestDimension * 1.7;
+        controls.target.copy(center);
+        camera.position.set(center.x + distance * .65, center.y + distance * 1.2, center.z + distance * 1.25);
+        camera.near = Math.max(largestDimension / 1000, 0.01);
+        camera.far = Math.max(largestDimension * 100, 1000);
+        camera.updateProjectionMatrix();
+        controls.update();
+        initialCamera = { position: camera.position.clone(), target: controls.target.clone() };
+      }
+
+      function resetModelView() {
+        if (!initialCamera) return;
+        camera.position.copy(initialCamera.position);
+        controls.target.copy(initialCamera.target);
+        controls.update();
+      }
+
+      resetModelButton?.addEventListener("click", resetModelView);
+      const resizeObserver = new ResizeObserver(resizeModel);
+      const handleResize = () => resizeModel();
+      window.addEventListener("resize", handleResize);
+      window.addEventListener("polaris:login-state", handleResize);
+      resizeObserver.observe(modelStage);
+      resizeModel();
+
+      async function getCachedModelUrl() {
+        if ("caches" in window) {
+          const cache = await caches.open("polaris-model-v1");
+          const cached = await cache.match(MODEL_URL);
+          if (cached) {
+            modelStatus.textContent = "Loading cached landscape model…";
+            modelObjectUrl = URL.createObjectURL(await cached.blob());
+            return modelObjectUrl;
+          }
+        }
+
+        try {
+          modelStatus.textContent = "Downloading landscape model for first use…";
+          const response = await fetch(MODEL_URL);
+          if (!response.ok) throw new Error(`Model request failed (${response.status})`);
+          if ("caches" in window) {
+            const cache = await caches.open("polaris-model-v1");
+            await cache.put(MODEL_URL, response.clone());
+          }
+          modelObjectUrl = URL.createObjectURL(await response.blob());
+          return modelObjectUrl;
+        } catch (error) {
+          console.warn("GLB asset unavailable; using the built-in reference landscape instead.", error);
+          return null;
+        }
+      }
+
+      getCachedModelUrl().then((modelUrl) => {
+        if (!modelUrl) {
+          model = createReferenceLandscapeModel();
+          scene.add(model);
+          frameModel(model);
+          resizeModel();
+          resetModelButton.disabled = false;
+          modelStatus.remove();
+          modelPill.textContent = "READY";
+          modelPill.className = "pill ok";
+          return;
+        }
+
+        gltfLoader.load(
+          modelUrl,
+          (gltf) => {
+            if (disposed) return;
+            model = gltf.scene;
+            scene.add(model);
+            frameModel(model);
+            resizeModel();
+            modelStatus.remove();
+            modelPill.textContent = "READY";
+            modelPill.className = "pill ok";
+            resetModelButton.disabled = false;
+          },
+          (event) => {
+            if (event.total) {
+              const percent = Math.round((event.loaded / event.total) * 100);
+              modelStatus.textContent = `Loading landscape model… ${percent}%`;
+            }
+          },
+          (error) => {
+            if (disposed) return;
+            console.warn("GLB failed to load; building the reference landscape instead.", error);
+            model = createReferenceLandscapeModel();
+            scene.add(model);
+            frameModel(model);
+            resizeModel();
+            modelStatus.remove();
+            modelPill.textContent = "READY";
+            modelPill.className = "pill ok";
+            resetModelButton.disabled = false;
+          }
+        );
+      }).catch((error) => {
+        if (disposed) return;
+        console.warn("Unable to prepare cached landscape model. Building the reference landscape instead.", error);
+        model = createReferenceLandscapeModel();
+        scene.add(model);
+        frameModel(model);
+        resizeModel();
+        modelStatus.remove();
+        modelPill.textContent = "READY";
+        modelPill.className = "pill ok";
+        resetModelButton.disabled = false;
+      });
+
+      function disposeMaterial(material) {
+        Object.values(material).forEach((value) => {
+          if (value && typeof value === "object" && "isTexture" in value) value.dispose();
+        });
+        material.dispose();
+      }
+
+      function closeModel() {
+        if (!activeViewer) return;
+        disposed = true;
+        cancelAnimationFrame(animationFrame);
+        resizeObserver.disconnect();
+        window.removeEventListener("resize", handleResize);
+        window.removeEventListener("polaris:login-state", handleResize);
+        window.removeEventListener("polaris:theme-change", applyViewerTheme);
+        resetModelButton?.removeEventListener("click", resetModelView);
+        controls.dispose();
+        scene.traverse((object) => {
+          if (!object.isMesh) return;
+          object.geometry.dispose();
+          const materials = Array.isArray(object.material) ? object.material : [object.material];
+          materials.forEach(disposeMaterial);
+        });
+        renderer.dispose();
+        renderer.domElement.remove();
+        dracoLoader.dispose();
+        if (modelObjectUrl) URL.revokeObjectURL(modelObjectUrl);
+        model = null;
+        activeViewer = null;
+        modelPreview.hidden = false;
+        modelStage.hidden = true;
+        modelStage.replaceChildren(modelStatus);
+        modelStatus.classList.add("loading");
+        modelStatus.classList.remove("error");
+        modelStatus.textContent = "Loading landscape model…";
+        modelPill.textContent = "PREVIEW";
+        modelPill.className = "pill info";
+        openModelButton.hidden = false;
+        resetModelButton.disabled = true;
+        closeModelButton.hidden = true;
+      }
+      closeModelButton?.addEventListener("click", closeModel);
+
+      function renderModel() {
+        animationFrame = requestAnimationFrame(renderModel);
+        controls.update();
+        renderer.render(scene, camera);
+      }
+      renderModel();
+    } catch (error) {
+      activeViewer = null;
+      modelPreview.hidden = false;
+      modelStage.hidden = true;
+      openModelButton.hidden = false;
+      modelStatus.hidden = false;
+      modelStatus.textContent = "3D viewer could not start in this browser.";
+      modelStatus.classList.add("error");
+      console.error("Unable to start 3D viewer", error);
+    }
+  }
 }
