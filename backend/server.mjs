@@ -92,7 +92,8 @@ async function handle(request, response) {
     if (useSupabase) await supabaseRequest("sensor_readings", { method: "POST", body: JSON.stringify(reading) }); else await writeJson(`telemetry-${deviceId}.json`, reading);
     return json(response, 202, { accepted: true, reading });
   }
-  if (url.pathname.startsWith("/api/") && !authorized(request) && !(url.pathname === "/api/access-requests" && adminAuthorized(request))) return json(response, 401, { error: "API key required" });
+  const isPublicDatasetRead = request.method === "GET" && /^\/api\/datasets(?:\/|$)/.test(url.pathname);
+  if (url.pathname.startsWith("/api/") && !isPublicDatasetRead && !authorized(request) && !(url.pathname === "/api/access-requests" && adminAuthorized(request))) return json(response, 401, { error: "API key required" });
   if (url.pathname === "/api/health") return json(response, 200, { ok: true, service: "polaris-ops-api", timestamp: new Date().toISOString() });
   if (url.pathname === "/api/datasets" && request.method === "GET") return json(response, 200, { datasets: Object.keys(await assetMap()), dom: true, domAttributes: { module: "data-dataset", item: "data-dataset-item", path: "data-dataset-path" } });
   const datasetMatch = url.pathname.match(/^\/api\/datasets\/([^/]+)$/);

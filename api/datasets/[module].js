@@ -20,7 +20,7 @@ function isAuthorized(request) {
 }
 
 export default function handler(request, response) {
-  if (!isAuthorized(request)) {
+  if (request.method !== "GET" && !isAuthorized(request)) {
     response.setHeader("WWW-Authenticate", "Bearer");
     response.status(401).json({ error: "API key required", hint: "Use x-api-key or Authorization: Bearer <key>." });
     return;
