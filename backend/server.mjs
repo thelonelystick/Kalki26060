@@ -83,6 +83,20 @@ async function handle(request, response) {
     const value = randomBytes(32).toString("hex"); adminTokens.add(value); return json(response, 200, { role: "admin", token: value });
   }
   const telemetryMatch = url.pathname.match(/^\/api\/telemetry\/([^/]+)$/);
+  if (telemetryMatch && request.method === "GET") {
+    const deviceId = decodeURIComponent(telemetryMatch[1]);
+    if (useSupabase) {
+      const rows = await supabaseRequest(`sensor_readings?device_id=eq.${encodeURIComponent(deviceId)}&select=device_id,received_at,readings&order=received_at.desc&limit=1`);
+      return json(response, 200, { deviceId, reading: rows[0] || null });
+    }
+    try {
+      const reading = JSON.parse(await readFile(resolve(dataDir, `telemetry-${deviceId}.json`), "utf8"));
+      return json(response, 200, { deviceId, reading });
+    } catch (error) {
+      if (error.code === "ENOENT") return json(response, 200, { deviceId, reading: null });
+      throw error;
+    }
+  }
   if (telemetryMatch && request.method === "POST") {
     const deviceId = decodeURIComponent(telemetryMatch[1]);
     if (!deviceAuthorized(request, deviceId)) return json(response, 401, { error: "Invalid IoT device key" });

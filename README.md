@@ -35,6 +35,7 @@ git worktree remove ../Kalki26060-feature
 - [api/auth/admin.js](api/auth/admin.js): Administrator credential endpoint that returns the configured admin API token after successful login.
 - [api/auth/account-role.js](api/auth/account-role.js): Account-role endpoint placeholder for future durable role lookup.
 - [api/datasets/[module].js](api/datasets/[module].js): Serverless dataset endpoint that serves fixture data and exposes the DOM binding contract; dataset writes require authorization.
+- [api/telemetry/[deviceId].js](api/telemetry/[deviceId].js): Serverless IoT endpoint that accepts authenticated device readings and returns the latest reading for the DOM.
 - [backend/server.mjs](backend/server.mjs): Local Node.js API server for health checks, datasets, admin updates, access requests, telemetry ingestion, and optional Supabase persistence.
 - [backend/arduino/telemetry.ino](backend/arduino/telemetry.ino): ESP32/Arduino example that posts sensor readings to the telemetry endpoint.
 

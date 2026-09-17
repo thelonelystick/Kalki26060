@@ -34,6 +34,7 @@ const MODEL_URL = new URL(
   document.baseURI
 ).href;
 const DATASET_URL = new URL("assets/polaris-dataset.json", document.baseURI);
+let telemetryPoll;
 
 const themeToggles = $$('[data-theme-toggle]');
 function setTheme(theme) {
@@ -282,6 +283,7 @@ function renderStationData(data) {
   const stationFields = {
     vDrs: [station.drs, "drs"], vHf: [station.hf, "hf"], vKp: [station.kp, "kp"],
     vTemp: [`${station.temperature}°C`, "temperature"], vWind: [`${station.wind} kt`, "wind"],
+    vHumidity: [station.humidity == null ? "—" : `${station.humidity}%`, "humidity"],
     vVis: [`${station.visibility} km`, "visibility"], vPbl: [`${station.pbl} m`, "pbl"],
     vDay: [station.winterOverDay, "winterOverDay"], kOrbits: [station.orbits, "orbits"],
     kData: [station.dataCapturedTb.toFixed(1), "dataCapturedTb"], kLink: [station.linkAvailability, "linkAvailability"]
@@ -294,6 +296,35 @@ function renderStationData(data) {
   if (linkBar) linkBar.style.width = `${station.linkAvailability}%`;
   setText("trackPill", `${data.passes.length} WINDOWS`);
   $("#trackPill")?.classList.replace("ok", "info");
+}
+
+function applyTelemetryToDom(data) {
+  const paths = {
+    "polaris.station.temperature": data.station.temperature == null ? "—" : `${data.station.temperature}°C`,
+    "polaris.station.humidity": data.station.humidity == null ? "—" : `${data.station.humidity}%`
+  };
+  Object.entries(paths).forEach(([path, value]) => {
+    $$(`[data-dataset-path="${path}"]`).forEach(element => { element.textContent = value; });
+  });
+}
+
+async function loadLatestTelemetry(data) {
+  try {
+    const response = await fetch("/api/telemetry/station-01");
+    if (!response.ok) return;
+    const payload = await response.json();
+    const readings = payload.reading?.readings || {};
+    const temperature = Number(readings.temperatureC);
+    const humidity = Number(readings.humidityPct);
+    if (Number.isFinite(temperature)) data.station.temperature = temperature;
+    if (Number.isFinite(humidity)) data.station.humidity = humidity;
+    if (Number.isFinite(temperature) || Number.isFinite(humidity)) {
+      renderStationData(data);
+      applyTelemetryToDom(data);
+    }
+  } catch (error) {
+    console.warn("Live telemetry unavailable; keeping the dataset values.", error);
+  }
 }
 
 function renderPasses(passes) {
@@ -555,6 +586,8 @@ async function loadDataset() {
     });
     renderStorm(data.storm);
     renderAllModuleData(await loadBackendDatasets());
+    await loadLatestTelemetry(data);
+    if (!telemetryPoll) telemetryPoll = window.setInterval(() => loadLatestTelemetry(data), 30000);
   } catch (error) {
     console.error("Unable to load Polaris dataset", error);
     renderStationData(localDataset);
